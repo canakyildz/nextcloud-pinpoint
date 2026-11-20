@@ -1,0 +1,50 @@
+{
+  "template": "invoice",
+  "locale": "fr-FR",
+  "fields": {
+    "supplier": {
+      "value": "Pinecrest Software Inc.",
+      "quote": "Pinecrest Software Inc.",
+      "page": 1
+    },
+    "invoice_number": {
+      "value": "2026-6336",
+      "quote": "2026-6336",
+      "page": 1
+    },
+    "issue_date": {
+      "value": "2026-06-27",
+      "quote": "27 juin 2026",
+      "page": 1
+    },
+    "due_date": {
+      "value": null,
+      "quote": null
+    },
+    "currency": {
+      "value": "EUR",
+      "quote": "648,00 €",
+      "page": 1
+    },
+    "subtotal": {
+      "value": 540.0,
+      "quote": "540,00 €",
+      "page": 1
+    },
+    "tax": {
+      "value": 108.0,
+      "quote": "108,00 €",
+      "page": 1
+    },
+    "total": {
+      "value": 648.0,
+      "quote": "648,00 €",
+      "page": 1
+    },
+    "iban": {
+      "value": "DE89 3704 0044 0532 0130 00",
+      "quote": "DE89 3704 0044 0532 0130 00",
+      "page": 1
+    }
+  }
+}

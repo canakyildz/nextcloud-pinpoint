@@ -1,0 +1,212 @@
+[
+  {
+    "name": "invoice-01",
+    "file": "invoice-01.pdf",
+    "kind": "digital",
+    "template": "invoice",
+    "locale": "en-US"
+  },
+  {
+    "name": "invoice-02",
+    "file": "invoice-02.pdf",
+    "kind": "digital",
+    "template": "invoice",
+    "locale": "en-GB"
+  },
+  {
+    "name": "invoice-03",
+    "file": "invoice-03.pdf",
+    "kind": "digital",
+    "template": "invoice",
+    "locale": "de-DE"
+  },
+  {
+    "name": "invoice-04",
+    "file": "invoice-04.pdf",
+    "kind": "digital",
+    "template": "invoice",
+    "locale": "fr-FR"
+  },
+  {
+    "name": "invoice-05",
+    "file": "invoice-05.pdf",
+    "kind": "digital",
+    "template": "invoice",
+    "locale": "en-US"
+  },
+  {
+    "name": "invoice-06",
+    "file": "invoice-06.pdf",
+    "kind": "digital",
+    "template": "invoice",
+    "locale": "en-GB"
+  },
+  {
+    "name": "invoice-07",
+    "file": "invoice-07.pdf",
+    "kind": "digital",
+    "template": "invoice",
+    "locale": "de-DE"
+  },
+  {
+    "name": "invoice-08",
+    "file": "invoice-08.pdf",
+    "kind": "digital",
+    "template": "invoice",
+    "locale": "fr-FR"
+  },
+  {
+    "name": "invoice-09",
+    "file": "invoice-09.pdf",
+    "kind": "digital",
+    "template": "invoice",
+    "locale": "en-US"
+  },
+  {
+    "name": "invoice-10",
+    "file": "invoice-10.pdf",
+    "kind": "digital",
+    "template": "invoice",
+    "locale": "en-GB"
+  },
+  {
+    "name": "invoice-11",
+    "file": "invoice-11.pdf",
+    "kind": "digital",
+    "template": "invoice",
+    "locale": "de-DE"
+  },
+  {
+    "name": "invoice-12",
+    "file": "invoice-12.pdf",
+    "kind": "digital",
+    "template": "invoice",
+    "locale": "fr-FR"
+  },
+  {
+    "name": "invoice-13",
+    "file": "invoice-13.pdf",
+    "kind": "digital",
+    "template": "invoice",
+    "locale": "en-US"
+  },
+  {
+    "name": "invoice-14",
+    "file": "invoice-14.pdf",
+    "kind": "digital",
+    "template": "invoice",
+    "locale": "en-GB"
+  },
+  {
+    "name": "invoice-15",
+    "file": "invoice-15.pdf",
+    "kind": "digital",
+    "template": "invoice",
+    "locale": "de-DE"
+  },
+  {
+    "name": "invoice-16",
+    "file": "invoice-16.pdf",
+    "kind": "digital",
+    "template": "invoice",
+    "locale": "fr-FR"
+  },
+  {
+    "name": "receipt-01",
+    "file": "receipt-01.pdf",
+    "kind": "digital",
+    "template": "receipt",
+    "locale": "en-US"
+  },
+  {
+    "name": "receipt-02",
+    "file": "receipt-02.pdf",
+    "kind": "digital",
+    "template": "receipt",
+    "locale": "en-GB"
+  },
+  {
+    "name": "receipt-03",
+    "file": "receipt-03.pdf",
+    "kind": "digital",
+    "template": "receipt",
+    "locale": "de-DE"
+  },
+  {
+    "name": "receipt-04",
+    "file": "receipt-04.pdf",
+    "kind": "digital",
+    "template": "receipt",
+    "locale": "fr-FR"
+  },
+  {
+    "name": "receipt-05",
+    "file": "receipt-05.pdf",
+    "kind": "digital",
+    "template": "receipt",
+    "locale": "en-US"
+  },
+  {
+    "name": "receipt-06",
+    "file": "receipt-06.pdf",
+    "kind": "digital",
+    "template": "receipt",
+    "locale": "en-GB"
+  },
+  {
+    "name": "receipt-07",
+    "file": "receipt-07.pdf",
+    "kind": "digital",
+    "template": "receipt",
+    "locale": "de-DE"
+  },
+  {
+    "name": "receipt-08",
+    "file": "receipt-08.pdf",
+    "kind": "digital",
+    "template": "receipt",
+    "locale": "fr-FR"
+  },
+  {
+    "name": "invoice-01-scan",
+    "file": "invoice-01-scan.jpg",
+    "kind": "scan",
+    "template": "invoice",
+    "locale": "en-US"
+  },
+  {
+    "name": "invoice-05-scan",
+    "file": "invoice-05-scan.jpg",
+    "kind": "scan",
+    "template": "invoice",
+    "locale": "en-US"
+  },
+  {
+    "name": "invoice-09-scan",
+    "file": "invoice-09-scan.jpg",
+    "kind": "scan",
+    "template": "invoice",
+    "locale": "en-US"
+  },
+  {
+    "name": "invoice-13-scan",
+    "file": "invoice-13-scan.jpg",
+    "kind": "scan",
+    "template": "invoice",
+    "locale": "en-US"
+  },
+  {
+    "name": "receipt-01-scan",
+    "file": "receipt-01-scan.jpg",
+    "kind": "scan",
+    "template": "receipt",
+    "locale": "en-US"
+  },
+  {
+    "name": "receipt-05-scan",
+    "file": "receipt-05-scan.jpg",
+    "kind": "scan",
+    "template": "receipt",
+    "locale": "en-US"
+  }
+]

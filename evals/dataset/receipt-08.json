@@ -1,0 +1,35 @@
+{
+  "template": "receipt",
+  "locale": "fr-FR",
+  "fields": {
+    "merchant": {
+      "value": "Librairie du Port",
+      "quote": "Librairie du Port",
+      "page": 1
+    },
+    "date": {
+      "value": "2026-06-26",
+      "quote": "26 juin 2026",
+      "page": 1
+    },
+    "currency": {
+      "value": "EUR",
+      "quote": "29,90 €",
+      "page": 1
+    },
+    "tax": {
+      "value": null,
+      "quote": null
+    },
+    "total": {
+      "value": 29.9,
+      "quote": "29,90 €",
+      "page": 1
+    },
+    "payment_method": {
+      "value": "Cash",
+      "quote": "Payé en espèces",
+      "page": 1
+    }
+  }
+}

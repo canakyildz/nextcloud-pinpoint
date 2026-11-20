@@ -1,0 +1,49 @@
+[project]
+name = "pinpoint"
+description = "Nextcloud ExApp: extract fields from documents into Tables, with every value pinned to its source"
+version = "0.1.0"
+requires-python = ">=3.12"
+license = "AGPL-3.0-or-later"
+authors = [{ name = "Emincan Akyıldız" }]
+readme = "README.md"
+
+[tool.pytest.ini_options]
+pythonpath = ["ex_app/lib", "evals"]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+  "ocr: needs the tesseract binary",
+  "integration: needs a running Nextcloud with Pinpoint registered (see tests/integration)",
+]
+addopts = "-m 'not integration'"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+src = ["ex_app/lib", "tests", "evals"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "S", "SIM", "RUF", "ASYNC", "PL"]
+ignore = [
+  "PLR0911", "PLR0912", "PLR0913", "PLR0915", "PLR0917", "PLR2004",  # complexity counters: judged in review
+  "RUF001", "RUF002", "RUF003",                           # typographic quotes in user-facing text are intended
+  "S101",                                                 # asserts in tests
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "PLC0415"]
+"evals/**" = ["S311", "E501", "PLC0415"]
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "ex_app/lib"
+packages = ["pinpoint"]
+strict = true
+ignore_missing_imports = true
+disallow_any_generics = false
+warn_return_any = false
+
+[[tool.mypy.overrides]]
+module = ["pinpoint.document"]
+disallow_untyped_calls = false  # PyMuPDF ships without type hints

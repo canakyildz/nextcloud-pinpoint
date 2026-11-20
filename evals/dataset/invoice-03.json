@@ -1,0 +1,50 @@
+{
+  "template": "invoice",
+  "locale": "de-DE",
+  "fields": {
+    "supplier": {
+      "value": "Atelier Verte SARL",
+      "quote": "Atelier Verte SARL",
+      "page": 1
+    },
+    "invoice_number": {
+      "value": "RE-6785",
+      "quote": "RE-6785",
+      "page": 1
+    },
+    "issue_date": {
+      "value": "2026-04-26",
+      "quote": "26.04.2026",
+      "page": 1
+    },
+    "due_date": {
+      "value": "2026-05-26",
+      "quote": "26.05.2026",
+      "page": 1
+    },
+    "currency": {
+      "value": "EUR",
+      "quote": "154,46 €",
+      "page": 1
+    },
+    "subtotal": {
+      "value": 129.8,
+      "quote": "129,80 €",
+      "page": 1
+    },
+    "tax": {
+      "value": 24.66,
+      "quote": "24,66 €",
+      "page": 1
+    },
+    "total": {
+      "value": 154.46,
+      "quote": "154,46 €",
+      "page": 1
+    },
+    "iban": {
+      "value": null,
+      "quote": null
+    }
+  }
+}

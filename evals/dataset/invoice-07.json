@@ -1,0 +1,51 @@
+{
+  "template": "invoice",
+  "locale": "de-DE",
+  "fields": {
+    "supplier": {
+      "value": "Maison Ocre Traiteur",
+      "quote": "Maison Ocre Traiteur",
+      "page": 1
+    },
+    "invoice_number": {
+      "value": "INV-1520",
+      "quote": "INV-1520",
+      "page": 1
+    },
+    "issue_date": {
+      "value": "2026-06-13",
+      "quote": "13.06.2026",
+      "page": 1
+    },
+    "due_date": {
+      "value": "2026-06-27",
+      "quote": "27.06.2026",
+      "page": 1
+    },
+    "currency": {
+      "value": "EUR",
+      "quote": "2.606,10 €",
+      "page": 1
+    },
+    "subtotal": {
+      "value": 2190.0,
+      "quote": "2.190,00 €",
+      "page": 1
+    },
+    "tax": {
+      "value": 416.1,
+      "quote": "416,10 €",
+      "page": 1
+    },
+    "total": {
+      "value": 2606.1,
+      "quote": "2.606,10 €",
+      "page": 1
+    },
+    "iban": {
+      "value": "GB33 BUKB 2020 1555 5555 55",
+      "quote": "GB33 BUKB 2020 1555 5555 55",
+      "page": 1
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "template": "invoice",
+  "locale": "en-GB",
+  "fields": {
+    "supplier": {
+      "value": "Lindqvist Consulting AB",
+      "quote": "Lindqvist Consulting AB",
+      "page": 1
+    },
+    "invoice_number": {
+      "value": "INV-2281",
+      "quote": "INV-2281",
+      "page": 1
+    },
+    "issue_date": {
+      "value": "2026-01-09",
+      "quote": "09/01/2026",
+      "page": 1
+    },
+    "due_date": {
+      "value": "2026-02-08",
+      "quote": "08/02/2026",
+      "page": 1
+    },
+    "currency": {
+      "value": "GBP",
+      "quote": "£806.16",
+      "page": 1
+    },
+    "subtotal": {
+      "value": 671.8,
+      "quote": "£671.80",
+      "page": 1
+    },
+    "tax": {
+      "value": 134.36,
+      "quote": "£134.36",
+      "page": 1
+    },
+    "total": {
+      "value": 806.16,
+      "quote": "£806.16",
+      "page": 1
+    },
+    "iban": {
+      "value": null,
+      "quote": null
+    }
+  }
+}

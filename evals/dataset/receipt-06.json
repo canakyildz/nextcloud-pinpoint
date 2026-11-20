@@ -1,0 +1,36 @@
+{
+  "template": "receipt",
+  "locale": "en-GB",
+  "fields": {
+    "merchant": {
+      "value": "Bäckerei Sonnenschein",
+      "quote": "Bäckerei Sonnenschein",
+      "page": 1
+    },
+    "date": {
+      "value": "2026-07-23",
+      "quote": "23/07/2026",
+      "page": 1
+    },
+    "currency": {
+      "value": "GBP",
+      "quote": "£17.39",
+      "page": 1
+    },
+    "tax": {
+      "value": 1.58,
+      "quote": "£1.58",
+      "page": 1
+    },
+    "total": {
+      "value": 17.39,
+      "quote": "£17.39",
+      "page": 1
+    },
+    "payment_method": {
+      "value": "Cash",
+      "quote": "Cash",
+      "page": 1
+    }
+  }
+}

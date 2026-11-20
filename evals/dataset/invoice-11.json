@@ -1,0 +1,51 @@
+{
+  "template": "invoice",
+  "locale": "de-DE",
+  "fields": {
+    "supplier": {
+      "value": "Atelier Verte SARL",
+      "quote": "Atelier Verte SARL",
+      "page": 1
+    },
+    "invoice_number": {
+      "value": "2026-4540",
+      "quote": "2026-4540",
+      "page": 1
+    },
+    "issue_date": {
+      "value": "2026-04-17",
+      "quote": "17.04.2026",
+      "page": 1
+    },
+    "due_date": {
+      "value": "2026-05-17",
+      "quote": "17.05.2026",
+      "page": 1
+    },
+    "currency": {
+      "value": "EUR",
+      "quote": "288,58 €",
+      "page": 1
+    },
+    "subtotal": {
+      "value": 242.5,
+      "quote": "242,50 €",
+      "page": 1
+    },
+    "tax": {
+      "value": 46.08,
+      "quote": "46,08 €",
+      "page": 1
+    },
+    "total": {
+      "value": 288.58,
+      "quote": "288,58 €",
+      "page": 1
+    },
+    "iban": {
+      "value": "GB33 BUKB 2020 1555 5555 55",
+      "quote": "GB33 BUKB 2020 1555 5555 55",
+      "page": 1
+    }
+  }
+}

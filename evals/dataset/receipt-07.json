@@ -1,0 +1,36 @@
+{
+  "template": "receipt",
+  "locale": "de-DE",
+  "fields": {
+    "merchant": {
+      "value": "Corner Market",
+      "quote": "Corner Market",
+      "page": 1
+    },
+    "date": {
+      "value": "2026-10-26",
+      "quote": "26.10.2026",
+      "page": 1
+    },
+    "currency": {
+      "value": "EUR",
+      "quote": "27,61 €",
+      "page": 1
+    },
+    "tax": {
+      "value": 1.81,
+      "quote": "1,81 €",
+      "page": 1
+    },
+    "total": {
+      "value": 27.61,
+      "quote": "27,61 €",
+      "page": 1
+    },
+    "payment_method": {
+      "value": "Card",
+      "quote": "Kartenzahlung",
+      "page": 1
+    }
+  }
+}

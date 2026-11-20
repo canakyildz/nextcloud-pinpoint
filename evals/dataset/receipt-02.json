@@ -1,0 +1,35 @@
+{
+  "template": "receipt",
+  "locale": "en-GB",
+  "fields": {
+    "merchant": {
+      "value": "Corner Market",
+      "quote": "Corner Market",
+      "page": 1
+    },
+    "date": {
+      "value": "2026-10-18",
+      "quote": "18/10/2026",
+      "page": 1
+    },
+    "currency": {
+      "value": "GBP",
+      "quote": "£10.74",
+      "page": 1
+    },
+    "tax": {
+      "value": null,
+      "quote": null
+    },
+    "total": {
+      "value": 10.74,
+      "quote": "£10.74",
+      "page": 1
+    },
+    "payment_method": {
+      "value": "Cash",
+      "quote": "Cash",
+      "page": 1
+    }
+  }
+}

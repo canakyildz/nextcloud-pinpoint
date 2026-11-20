@@ -1,0 +1,51 @@
+{
+  "template": "invoice",
+  "locale": "en-US",
+  "fields": {
+    "supplier": {
+      "value": "Nordlicht Bürobedarf GmbH",
+      "quote": "Nordlicht Bürobedarf GmbH",
+      "page": 1
+    },
+    "invoice_number": {
+      "value": "2026-5811",
+      "quote": "2026-5811",
+      "page": 1
+    },
+    "issue_date": {
+      "value": "2026-04-23",
+      "quote": "04/23/2026",
+      "page": 1
+    },
+    "due_date": {
+      "value": "2026-05-07",
+      "quote": "05/07/2026",
+      "page": 1
+    },
+    "currency": {
+      "value": "USD",
+      "quote": "$726.08",
+      "page": 1
+    },
+    "subtotal": {
+      "value": 672.3,
+      "quote": "$672.30",
+      "page": 1
+    },
+    "tax": {
+      "value": 53.78,
+      "quote": "$53.78",
+      "page": 1
+    },
+    "total": {
+      "value": 726.08,
+      "quote": "$726.08",
+      "page": 1
+    },
+    "iban": {
+      "value": "GB33 BUKB 2020 1555 5555 55",
+      "quote": "GB33 BUKB 2020 1555 5555 55",
+      "page": 1
+    }
+  }
+}

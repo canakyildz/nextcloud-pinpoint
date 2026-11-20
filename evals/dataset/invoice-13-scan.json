@@ -1,0 +1,51 @@
+{
+  "template": "invoice",
+  "locale": "en-US",
+  "fields": {
+    "supplier": {
+      "value": "Kestrel Print Studio",
+      "quote": "Kestrel Print Studio",
+      "page": 1
+    },
+    "invoice_number": {
+      "value": "RE-5471",
+      "quote": "RE-5471",
+      "page": 1
+    },
+    "issue_date": {
+      "value": "2026-05-28",
+      "quote": "05/28/2026",
+      "page": 1
+    },
+    "due_date": {
+      "value": "2026-06-11",
+      "quote": "06/11/2026",
+      "page": 1
+    },
+    "currency": {
+      "value": "USD",
+      "quote": "$5,034.64",
+      "page": 1
+    },
+    "subtotal": {
+      "value": 4661.7,
+      "quote": "$4,661.70",
+      "page": 1
+    },
+    "tax": {
+      "value": 372.94,
+      "quote": "$372.94",
+      "page": 1
+    },
+    "total": {
+      "value": 5034.64,
+      "quote": "$5,034.64",
+      "page": 1
+    },
+    "iban": {
+      "value": "FR14 2004 1010 0505 0001 3M02 606",
+      "quote": "FR14 2004 1010 0505 0001 3M02 606",
+      "page": 1
+    }
+  }
+}

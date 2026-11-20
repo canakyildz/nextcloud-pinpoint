@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>pinpoint</id>
+	<name>Pinpoint</name>
+	<summary>Extract fields from invoices and receipts into Tables, with every value pinned to its source</summary>
+	<description><![CDATA[Pinpoint reads invoices, receipts and other documents in your Files and fills a row in [Tables](https://apps.nextcloud.com/apps/tables) for each one. Every value shows exactly where it was found: the page, the highlighted spot and the text it was read from.
+
+**Why it is different**
+
+- **Every value is checked against the document.** The language model must quote the text it read each value from. Pinpoint looks that quote up in the document's own text and only marks a value *verified* when the document literally says it. Values the model could not point to are marked *not found* instead of being presented as fact.
+- **Your table is the schema.** Pick a table, and its columns are what Pinpoint extracts. Column descriptions tell the model what to look for. Or start from the invoice and receipt templates.
+- **Sums and dates are cross-checked.** Net + tax must equal the total, the due date cannot be before the issue date. When a check fails, the values involved go to review.
+- **A person approves before anything is saved.** The review screen puts each value next to its highlighted source. The row written to Tables keeps a link to the file and the evidence for each value.
+- **Your AI, your server.** Pinpoint has no model of its own: it uses the text generation provider your admin configured in Nextcloud (for example the local [llm2](https://apps.nextcloud.com/apps/llm2), LocalAI or Ollama). Scans and photos are read with Tesseract inside the app's container.
+- **Works with the Assistant.** Pinpoint adds an "Extract fields from a document" task to the Nextcloud Assistant.
+
+**Requirements**: [AppAPI](https://docs.nextcloud.com/server/latest/admin_manual/exapps_management/AppAPIAndExternalApps.html) with a deploy daemon (HaRP), the Tables app, and a text generation provider (Administration → Artificial intelligence).
+
+**Data**: Document text is sent to the text generation provider configured on your Nextcloud. Pinpoint stores extracted values waiting for review inside its container for a configurable number of days and keeps no copies of your files.
+]]></description>
+	<version>0.1.0</version>
+	<licence>AGPL-3.0-or-later</licence>
+	<author mail="contact@emincan.com" homepage="https://emincan.com">Emincan Akyıldız</author>
+	<namespace>Pinpoint</namespace>
+	<category>ai</category>
+	<category>office</category>
+	<category>workflow</category>
+	<website>https://github.com/canakyildz/nextcloud-pinpoint</website>
+	<bugs>https://github.com/canakyildz/nextcloud-pinpoint/issues</bugs>
+	<repository type="git">https://github.com/canakyildz/nextcloud-pinpoint</repository>
+	<screenshot>https://raw.githubusercontent.com/canakyildz/nextcloud-pinpoint/main/screenshots/review.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/canakyildz/nextcloud-pinpoint/main/screenshots/tables.png</screenshot>
+	<dependencies>
+		<nextcloud min-version="33" max-version="36"/>
+	</dependencies>
+	<external-app>
+		<docker-install>
+			<registry>ghcr.io</registry>
+			<image>canakyildz/nextcloud-pinpoint</image>
+			<image-tag>0.1.0</image-tag>
+		</docker-install>
+		<routes>
+			<route>
+				<url>^\/?api\/.*</url>
+				<verb>GET,POST,DELETE</verb>
+				<access_level>USER</access_level>
+				<headers_to_exclude>[]</headers_to_exclude>
+			</route>
+			<route>
+				<url>^\/?(js|img)\/.*</url>
+				<verb>GET</verb>
+				<access_level>USER</access_level>
+				<headers_to_exclude>[]</headers_to_exclude>
+			</route>
+		</routes>
+	</external-app>
+</info>

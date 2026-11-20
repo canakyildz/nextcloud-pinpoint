@@ -1,0 +1,51 @@
+{
+  "template": "invoice",
+  "locale": "en-GB",
+  "fields": {
+    "supplier": {
+      "value": "Harbour & Finch Design Ltd",
+      "quote": "Harbour & Finch Design Ltd",
+      "page": 1
+    },
+    "invoice_number": {
+      "value": "2026-8051",
+      "quote": "2026-8051",
+      "page": 1
+    },
+    "issue_date": {
+      "value": "2026-05-26",
+      "quote": "26/05/2026",
+      "page": 1
+    },
+    "due_date": {
+      "value": "2026-06-09",
+      "quote": "09/06/2026",
+      "page": 1
+    },
+    "currency": {
+      "value": "GBP",
+      "quote": "£2,659.20",
+      "page": 1
+    },
+    "subtotal": {
+      "value": 2216.0,
+      "quote": "£2,216.00",
+      "page": 1
+    },
+    "tax": {
+      "value": 443.2,
+      "quote": "£443.20",
+      "page": 1
+    },
+    "total": {
+      "value": 2659.2,
+      "quote": "£2,659.20",
+      "page": 1
+    },
+    "iban": {
+      "value": "FR14 2004 1010 0505 0001 3M02 606",
+      "quote": "FR14 2004 1010 0505 0001 3M02 606",
+      "page": 1
+    }
+  }
+}

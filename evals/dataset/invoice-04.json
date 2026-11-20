@@ -1,0 +1,50 @@
+{
+  "template": "invoice",
+  "locale": "fr-FR",
+  "fields": {
+    "supplier": {
+      "value": "Bluefield Analytics LLC",
+      "quote": "Bluefield Analytics LLC",
+      "page": 1
+    },
+    "invoice_number": {
+      "value": "2026-8843",
+      "quote": "2026-8843",
+      "page": 1
+    },
+    "issue_date": {
+      "value": "2026-07-21",
+      "quote": "21 juillet 2026",
+      "page": 1
+    },
+    "due_date": {
+      "value": null,
+      "quote": null
+    },
+    "currency": {
+      "value": "EUR",
+      "quote": "9 394,80 €",
+      "page": 1
+    },
+    "subtotal": {
+      "value": 7829.0,
+      "quote": "7 829,00 €",
+      "page": 1
+    },
+    "tax": {
+      "value": 1565.8,
+      "quote": "1 565,80 €",
+      "page": 1
+    },
+    "total": {
+      "value": 9394.8,
+      "quote": "9 394,80 €",
+      "page": 1
+    },
+    "iban": {
+      "value": "DE89 3704 0044 0532 0130 00",
+      "quote": "DE89 3704 0044 0532 0130 00",
+      "page": 1
+    }
+  }
+}
