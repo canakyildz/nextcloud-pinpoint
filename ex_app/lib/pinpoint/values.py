@@ -225,8 +225,12 @@ def is_ambiguous_date(text: str) -> bool:
 
 def detect_conventions(text: str) -> tuple[DecimalHint, DateOrder]:
     """Guess the document's decimal separator and date order from its unambiguous examples."""
-    comma_decimal = len(re.findall(r"\d\.\d{3},\d{1,2}\b", text)) + len(re.findall(r"(?<![\d.,])\d{1,3},\d{2}\b(?![.,]\d)", text))
-    dot_decimal = len(re.findall(r"\d,\d{3}\.\d{1,2}\b", text)) + len(re.findall(r"(?<![\d.,])\d{1,3}\.\d{2}\b(?![.,]\d)", text))
+    comma_decimal = len(re.findall(r"\d\.\d{3},\d{1,2}\b", text)) + len(
+        re.findall(r"(?<![\d.,])\d{1,3},\d{2}\b(?![.,]\d)", text)
+    )
+    dot_decimal = len(re.findall(r"\d,\d{3}\.\d{1,2}\b", text)) + len(
+        re.findall(r"(?<![\d.,])\d{1,3}\.\d{2}\b(?![.,]\d)", text)
+    )
     decimal: DecimalHint = None
     if comma_decimal > dot_decimal:
         decimal = ","

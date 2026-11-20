@@ -57,3 +57,12 @@ def test_field_answers_accepts_labels_bare_values_and_missing_wrapper():
 def test_field_answers_rejects_a_non_object():
     with pytest.raises(ModelOutputError):
         field_answers({"fields": ["a"]}, INVOICE)
+
+
+def test_unquoted_comma_decimals_are_repaired():
+    # Seen with qwen2.5 on a French invoice: numbers copied in the document's own notation.
+    answer = '{"fields": {"total": {"value": 9394,80, "quote": "Total TTC: 9 394,80 €"}, "tax": {"value": 1 565,80}}}'
+    data = parse_model_json(answer)
+    assert data["fields"]["total"]["value"] == "9394,80"
+    assert data["fields"]["tax"]["value"] == "1 565,80"
+    assert data["fields"]["total"]["quote"] == "Total TTC: 9 394,80 €"

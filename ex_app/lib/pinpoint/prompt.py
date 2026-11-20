@@ -92,6 +92,12 @@ def build_repair_prompt(previous_answer: str) -> str:
 _THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
 _FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)```", re.DOTALL | re.IGNORECASE)
 _TRAILING_COMMA_RE = re.compile(r",\s*([}\]])")
+# Small models sometimes write numbers the way the document does, unquoted: "value": 7829,00
+_COMMA_NUMBER_RE = re.compile(r"(:\s*)(-?\d{1,3}(?:[ .\u00a0\u202f]\d{3})*,\d+|-?\d+,\d+)(?=\s*[,}\]])")
+
+
+def _quote_comma_numbers(text: str) -> str:
+    return _COMMA_NUMBER_RE.sub(r'\1"\2"', text)
 
 
 def parse_model_json(text: str) -> dict[str, Any]:
@@ -104,7 +110,8 @@ def parse_model_json(text: str) -> dict[str, Any]:
     if start == -1 or end <= start:
         raise ModelOutputError("The model did not return JSON.")
     candidate = cleaned[start : end + 1]
-    for attempt in (candidate, _TRAILING_COMMA_RE.sub(r"\1", candidate)):
+    repaired = _TRAILING_COMMA_RE.sub(r"\1", candidate)
+    for attempt in (candidate, repaired, _quote_comma_numbers(repaired)):
         try:
             data = json.loads(attempt)
         except json.JSONDecodeError:

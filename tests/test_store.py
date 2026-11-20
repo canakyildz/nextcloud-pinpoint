@@ -1,4 +1,4 @@
-import time
+import asyncio
 
 from pinpoint.store import JobStatus, JobStore
 
@@ -31,7 +31,7 @@ async def test_retention_keeps_running_jobs(tmp_path):
     running = await store.create("alice", 2, "run.pdf", "application/pdf", {"id": "s", "name": "S"}, None)
     await store.update(old.id, status=JobStatus.DONE)
     await store.update(running.id, status=JobStatus.RUNNING)
-    time.sleep(0.01)
+    await asyncio.sleep(0.01)
     assert await store.delete_older_than(0.0000001) == 1
     assert await store.get(old.id) is None
     assert await store.get(running.id) is not None

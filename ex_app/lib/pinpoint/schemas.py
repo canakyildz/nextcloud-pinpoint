@@ -25,7 +25,13 @@ INVOICE = Schema(
         FieldSpec("invoice_number", "Invoice number", FieldType.TEXT, "The invoice's own number or reference.", True),
         FieldSpec("issue_date", "Issue date", FieldType.DATE, "Date the invoice was issued.", True, role="issue_date"),
         FieldSpec("due_date", "Due date", FieldType.DATE, "Payment due date, if stated.", role="due_date"),
-        FieldSpec("currency", "Currency", FieldType.TEXT, "ISO 4217 currency code, e.g. EUR or USD."),
+        FieldSpec(
+            "currency",
+            "Currency",
+            FieldType.TEXT,
+            "ISO 4217 code such as EUR, USD or GBP. As the quote, copy an amount with its currency symbol.",
+            role="currency",
+        ),
         FieldSpec("subtotal", "Net amount", FieldType.NUMBER, "Total before tax.", role="subtotal"),
         FieldSpec("tax", "Tax amount", FieldType.NUMBER, "Total tax (VAT) amount.", role="tax"),
         FieldSpec("total", "Total amount", FieldType.NUMBER, "Total amount to pay, including tax.", True, role="total"),
@@ -40,7 +46,13 @@ RECEIPT = Schema(
     fields=(
         FieldSpec("merchant", "Merchant", FieldType.TEXT, "Name of the shop, restaurant or company.", True),
         FieldSpec("date", "Date", FieldType.DATE, "Date of the purchase.", True, role="issue_date"),
-        FieldSpec("currency", "Currency", FieldType.TEXT, "ISO 4217 currency code, e.g. EUR or USD."),
+        FieldSpec(
+            "currency",
+            "Currency",
+            FieldType.TEXT,
+            "ISO 4217 code such as EUR, USD or GBP. As the quote, copy an amount with its currency symbol.",
+            role="currency",
+        ),
         FieldSpec("tax", "Tax amount", FieldType.NUMBER, "Total tax (VAT) included, if stated.", role="tax"),
         FieldSpec("total", "Total amount", FieldType.NUMBER, "Total amount paid.", True, role="total"),
         FieldSpec(
@@ -99,6 +111,8 @@ _ROLE_HINTS = {
 
 def _guess_role(label: str, field_type: FieldType) -> str | None:
     text = label.casefold()
+    if field_type == FieldType.TEXT and any(h in text for h in ("currency", "währung", "devise", "moneda", "valuta")):
+        return "currency"
     if field_type == FieldType.NUMBER:
         for role in ("subtotal", "tax", "total"):
             if any(hint in text for hint in _ROLE_HINTS[role]):

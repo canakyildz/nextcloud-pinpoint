@@ -13,6 +13,7 @@ import time
 from dataclasses import dataclass
 from typing import Any, Protocol
 
+import niquests
 from nc_py_api import AsyncNextcloudApp, NextcloudException, NextcloudExceptionNotFound
 
 from . import tables as tables_mod
@@ -104,7 +105,7 @@ class TaskProcessingModel:
         deadline = time.monotonic() + self.timeout
         delay = self.poll_interval
         while True:
-            task = (await self.nc.ocs("GET", f"/ocs/v2.php/taskprocessing/task/{task_id}"))["task"]
+            task = (await _get_with_retry(self.nc, f"/ocs/v2.php/taskprocessing/task/{task_id}"))["task"]
             status = task["status"]
             if status == "STATUS_SUCCESSFUL":
                 output = task.get("output") or {}
@@ -117,7 +118,19 @@ class TaskProcessingModel:
                     await self.nc.ocs("POST", f"/ocs/v2.php/taskprocessing/tasks/{task_id}/cancel")
                 raise NextcloudError("The text generation task took too long and was cancelled.")
             await asyncio.sleep(delay)
-            delay = min(delay * 1.5, 5.0)
+            delay = min(delay * 1.5, 3.0)  # stay under Apache's default 5 s keep-alive
+
+
+async def _get_with_retry(nc: AsyncNextcloudApp, path: str, attempts: int = 3) -> Any:
+    """GET is idempotent, so a connection the web server closed while idle is simply retried."""
+    for attempt in range(attempts):
+        try:
+            return await nc.ocs("GET", path)
+        except niquests.exceptions.ConnectionError:
+            if attempt == attempts - 1:
+                raise
+            await asyncio.sleep(0.5 * (attempt + 1))
+    raise AssertionError("unreachable")
 
 
 class NextcloudGateway:

@@ -148,8 +148,9 @@ async def test_a_model_that_never_returns_json_fails_the_job_readably(client, ga
     assert "JSON" in job["error"]
     assert "could not read" in gateway.notifications[-1][1]
 
-    gateway.model = ScriptedModel(truth_answer("invoice-03", schema_from_table(gateway.tables[table_id],
-                                                                              gateway.columns[table_id])))
+    gateway.model = ScriptedModel(
+        truth_answer("invoice-03", schema_from_table(gateway.tables[table_id], gateway.columns[table_id]))
+    )
     retried = (await client.post(f"/api/jobs/{job['id']}/retry")).json()
     assert retried["status"] == "queued"
     assert (await _finished(client, job["id"]))["status"] == "done"

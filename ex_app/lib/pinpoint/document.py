@@ -10,6 +10,7 @@ from __future__ import annotations
 import io
 import logging
 import shutil
+import unicodedata
 from collections.abc import Iterator
 from dataclasses import dataclass
 
@@ -112,7 +113,8 @@ def _text_layer_words(page: pymupdf.Page, index: int) -> list[Word]:
     line_ids: dict[tuple[int, int], int] = {}
     words: list[Word] = []
     for x0, y0, x1, y1, raw_text, block_no, line_no, _word_no in page.get_text("words", sort=True):
-        text = raw_text.strip()
+        # NFKC turns ligatures ("ﬁ") and full-width forms into plain letters, which models read reliably.
+        text = unicodedata.normalize("NFKC", raw_text).strip()
         if not text:
             continue
         rect = pymupdf.Rect(x0, y0, x1, y1) * matrix
@@ -176,7 +178,7 @@ def _ocr_words(image: Image.Image, index: int, languages: str) -> list[Word]:
     line_ids: dict[tuple[int, int, int], int] = {}
     words: list[Word] = []
     for i, raw_text in enumerate(data["text"]):
-        text = (raw_text or "").strip()
+        text = unicodedata.normalize("NFKC", raw_text or "").strip()
         if not text or float(data["conf"][i]) < 0:
             continue
         left, top, w, h = data["left"][i], data["top"][i], data["width"][i], data["height"][i]

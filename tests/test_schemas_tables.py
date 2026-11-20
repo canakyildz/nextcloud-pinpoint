@@ -13,8 +13,13 @@ def _columns():
         {"id": 2, "title": "Gesamtbetrag", "type": "number", "subtype": ""},
         {"id": 3, "title": "Rechnungsdatum", "type": "datetime", "subtype": "date", "mandatory": True},
         {"id": 4, "title": "Fällig am", "type": "datetime", "subtype": "date"},
-        {"id": 5, "title": "Method", "type": "selection", "subtype": "",
-         "selectionOptions": [{"id": 0, "label": "Cash"}, {"id": 1, "label": "Card"}]},
+        {
+            "id": 5,
+            "title": "Method",
+            "type": "selection",
+            "subtype": "",
+            "selectionOptions": [{"id": 0, "label": "Cash"}, {"id": 1, "label": "Card"}],
+        },
         {"id": 6, "title": "Paid", "type": "selection", "subtype": "check"},
         {"id": 7, "title": "Rating", "type": "number", "subtype": "stars"},
         {"id": 8, "title": "Owner", "type": "usergroup", "subtype": ""},
@@ -75,8 +80,12 @@ def test_cell_values():
 def test_evidence_lists_page_and_text_and_marks_edits():
     result = {
         "fields": [
-            {"key": "merchant", "value": "Corner Market", "status": "verified",
-             "anchor": {"page": 0, "matched_text": "Corner *Market*"}},
+            {
+                "key": "merchant",
+                "value": "Corner Market",
+                "status": "verified",
+                "anchor": {"page": 0, "matched_text": "Corner *Market*"},
+            },
             {"key": "total", "value": 12.0, "status": "review", "anchor": {"page": 0, "matched_text": "$12.00"}},
             {"key": "date", "value": None, "status": "missing", "anchor": None},
         ],

@@ -85,9 +85,8 @@ async def test_failed_sum_check_sends_all_three_amounts_to_review():
 
 
 async def test_due_date_before_issue_date_is_flagged():
-    result = await _run(
-        "invoice-03", INVOICE, {"due_date": {"value": "2026-01-01", "quote": truth("invoice-03")["fields"]["issue_date"]["quote"]}}
-    )
+    issue_quote = truth("invoice-03")["fields"]["issue_date"]["quote"]
+    result = await _run("invoice-03", INVOICE, {"due_date": {"value": "2026-01-01", "quote": issue_quote}})
     order = next(c for c in result.checks if c.id == "order:issue<=due")
     assert not order.passed
 
@@ -142,3 +141,10 @@ async def test_repair_prompt_recovers():
     model = ScriptedModel("The supplier is Nordlicht.", good)
     result = await extract_from_document(document, INVOICE, model, NO_OCR)
     assert result.field("supplier").status == FieldStatus.VERIFIED
+
+
+async def test_currency_symbol_becomes_its_code():
+    result = await _run("invoice-03", INVOICE, {"currency": {"value": "€"}})
+    currency = result.field("currency")
+    assert currency.value == "EUR"
+    assert currency.status == FieldStatus.VERIFIED

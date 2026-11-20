@@ -1,0 +1,14 @@
+# Additions for the integration tests: a deterministic OpenAI-compatible model (mock_llm.py).
+# Use together with dev/docker-compose.yml (paths resolve from dev/, the first file).
+services:
+  mockllm:
+    image: pinpoint-dev:latest  # built by the pinpoint service
+    pull_policy: never
+    working_dir: /repo
+    command: ["python3", "tests/integration/mock_llm.py"]
+    volumes:
+      - ..:/repo:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8000/v1/models"]
+      interval: 2s
+      retries: 30

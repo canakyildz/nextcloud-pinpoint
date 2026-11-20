@@ -53,6 +53,7 @@ services:
         condition: service_healthy
 
   pinpoint:
+    image: pinpoint-dev:latest
     build:
       context: ..
       target: dev

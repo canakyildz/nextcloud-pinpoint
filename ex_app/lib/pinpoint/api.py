@@ -101,6 +101,19 @@ async def table_schema(table_id: int, user: User, service: Service) -> Any:
         return _errors(exc)
 
 
+@router.get("/files")
+async def file_names(ids: str, user: User, service: Service) -> Any:
+    """Names of the files the Files action passed in (?fileIds=…), read with the user's permissions."""
+    files = []
+    for raw in ids.split(",")[:20]:
+        try:
+            info = await service.gateway.file_info(user, int(raw))
+        except (ValueError, NextcloudError):
+            continue
+        files.append({"id": info.id, "name": info.name, "mime": info.mime, "size": info.size})
+    return {"files": files}
+
+
 @router.get("/jobs")
 async def list_jobs(user: User, service: Service) -> Any:
     return {"jobs": [j.to_dict(include_result=False) for j in await service.list_jobs(user)]}

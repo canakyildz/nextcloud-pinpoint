@@ -102,3 +102,10 @@ def test_scanned_receipt_goes_through_ocr():
     document = load_document(dataset_file("receipt-01-scan.jpg"), None, LoadOptions(ocr_languages="eng+deu"))
     assert document.pages[0].source.value == "ocr"
     assert "sonnenschein" in document_text(document).casefold()
+
+
+def test_ligatures_are_unfolded_for_the_model():
+    # The generated invoices use "ﬁ" ligatures; a model once read "Bluefield" as "Blueïeld".
+    text = document_text(load_document(dataset_file("invoice-04.pdf"), None, NO_OCR))
+    assert "Bluefield Analytics LLC" in text
+    assert "\ufb01" not in text

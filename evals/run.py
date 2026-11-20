@@ -78,6 +78,8 @@ class Case:
     truth: dict[str, Any]
     date_order_known: bool = True
     """False when the document's dates could be read day-first or month-first."""
+    text: str = ""
+    """The document's text as Pinpoint read it (OCR output for scans), normalised."""
 
 
 def load_cases(include_scans: bool) -> list[Case]:
@@ -178,20 +180,26 @@ class OracleTally:
     misses: list[str] = field(default_factory=list)
 
 
-def expected_status(case: Case, key: str) -> FieldStatus:
-    """What a correct answer should get. Selection and yes/no values are the model's reading of the
-    quote unless the option is written out, so they are sent to review by design."""
+NOT_VERIFIED = frozenset({FieldStatus.REVIEW, FieldStatus.UNVERIFIED})
+
+
+def expected_status(case: Case, key: str) -> frozenset[FieldStatus]:
+    """The statuses a correct answer may get. Selection and yes/no values are the model's reading of
+    the quote unless the option is written out, so they go to review by design. On scans, a value the
+    OCR did not read literally (an umlaut lost, a 0 read as O) cannot be verified, so it must not be."""
     truth = case.truth["fields"][key]
     if truth["value"] is None:
-        return FieldStatus.MISSING
+        return frozenset({FieldStatus.MISSING})
+    if case.kind == "scan" and normalize_text(truth["quote"] or "") not in case.text:
+        return NOT_VERIFIED
     spec = next(f for f in case.schema.fields if f.key == key)
     if spec.type in (FieldType.SELECTION, FieldType.BOOLEAN) and normalize_text(
         str(truth["value"])
     ) not in normalize_text(truth["quote"] or ""):
-        return FieldStatus.REVIEW
+        return frozenset({FieldStatus.REVIEW})
     if spec.type == FieldType.DATE and not case.date_order_known and is_ambiguous_date(truth["quote"] or ""):
-        return FieldStatus.REVIEW
-    return FieldStatus.VERIFIED
+        return frozenset({FieldStatus.REVIEW})
+    return frozenset({FieldStatus.VERIFIED})
 
 
 def downgraded_by_check(result: FieldResult) -> bool:
@@ -204,7 +212,13 @@ async def run_oracle(cases: list[Case], options: PipelineOptions) -> dict[str, A
     tally = OracleTally()
     for case in cases:
         document = load_document(case.path.read_bytes(), None, options.load)
-        case.date_order_known = detect_conventions(document_text(document))[1] is not None
+        text = document_text(document)
+        case.date_order_known = detect_conventions(text)[1] is not None
+        case.text = normalize_text(text)
+        if case.kind == "scan":
+            tally.total["scan_fields_ocr_differs"] += sum(
+                1 for k, t in case.truth["fields"].items() if t["quote"] and normalize_text(t["quote"]) not in case.text
+            )
         for fault in FAULTS:
             for target in _targets(case, fault):
                 model = OracleModel(case.truth, fault, target, rng)
@@ -218,7 +232,7 @@ async def run_oracle(cases: list[Case], options: PipelineOptions) -> dict[str, A
                         continue
                     tally.total[fault] += 1
                     if fault in POSITIVE:
-                        ok = r.status == expected_status(case, r.key)
+                        ok = r.status in expected_status(case, r.key)
                     else:
                         ok = r.status != FieldStatus.VERIFIED
                     if ok:
@@ -231,7 +245,7 @@ async def run_oracle(cases: list[Case], options: PipelineOptions) -> dict[str, A
                         if r in judged:
                             continue
                         tally.total["untouched"] += 1
-                        if r.status == expected_status(case, r.key):
+                        if r.status in expected_status(case, r.key):
                             tally.expected_ok["untouched"] += 1
                         elif downgraded_by_check(r):
                             # Correct, and sent to review only because a check it takes part in failed:
@@ -249,6 +263,7 @@ async def run_oracle(cases: list[Case], options: PipelineOptions) -> dict[str, A
         "documents": len(cases),
         "by_fault": {f: {"expected": tally.expected_ok[f], "total": tally.total[f]} for f in (*FAULTS, "untouched")},
         "untouched_downgraded_by_check": tally.total["untouched_downgraded_by_check"],
+        "scan_fields_ocr_differs": tally.total["scan_fields_ocr_differs"],
         "positive_verified_rate": positive_ok / positive_total if positive_total else 0.0,
         "fault_caught_rate": fault_ok / fault_total if fault_total else 0.0,
         "misses": tally.misses,
@@ -352,6 +367,9 @@ def _report_markdown(title: str, summary: dict[str, Any], args: argparse.Namespa
             f"Untouched fields sent to review because a check they take part in failed: "
             f"{summary['untouched_downgraded_by_check']} (counted as expected: when net + tax != total, "
             "Pinpoint cannot tell which amount is wrong, so all three go to review).",
+            "",
+            f"Fields on scans whose printed text the OCR did not read literally: {summary['scan_fields_ocr_differs']} "
+            "(for these, a correct value is expected to go to review rather than be verified).",
         ]
     else:
         counts = summary["status_counts"]

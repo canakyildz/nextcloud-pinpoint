@@ -1,0 +1,39 @@
+{
+  "name": "pinpoint",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Frontend of the Pinpoint Nextcloud ExApp",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --mode development --watch",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "browserslist": [
+    "extends @nextcloud/browserslist-config"
+  ],
+  "dependencies": {
+    "@mdi/js": "^7.4.47",
+    "@nextcloud/axios": "^2.6.0",
+    "@nextcloud/dialogs": "^8.0.0",
+    "@nextcloud/files": "^4.1.1",
+    "@nextcloud/l10n": "^3.4.1",
+    "@nextcloud/router": "^3.2.0",
+    "@nextcloud/vue": "^9.14.1",
+    "vue": "^3.5.46",
+    "vue-router": "^4.6.5"
+  },
+  "devDependencies": {
+    "@nextcloud/browserslist-config": "^3.0.1",
+    "@types/node": "^24.0.0",
+    "@vitejs/plugin-vue": "^6.0.11",
+    "playwright-core": "^1.65.1",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.8",
+    "vue-tsc": "^3.3.14"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -74,7 +74,19 @@ def normalize_value(spec: FieldSpec, raw: Any, decimal: DecimalHint, order: Date
             if option.casefold() == text.casefold():
                 return option, None
         return text, f"“{text}” is not one of the column's options"
-    return str(raw).strip(), None
+    text = str(raw).strip()
+    if spec.role == "currency":
+        text = _currency_code(text)
+    return text, None
+
+
+def _currency_code(text: str) -> str:
+    """ "€" → "EUR": the column holds codes, the document often shows symbols."""
+    folded = text.casefold()
+    for code, symbols in _CURRENCY_SYMBOLS.items():
+        if folded == code.casefold() or (folded in symbols and folded not in ("kr", "fr.")):
+            return code
+    return text
 
 
 def value_matches_text(spec: FieldSpec, value: Any, text: str, decimal: DecimalHint, order: DateOrder) -> bool:
@@ -91,12 +103,10 @@ def value_matches_text(spec: FieldSpec, value: Any, text: str, decimal: DecimalH
         return False
     if folded_value in folded_text:
         return True
-    upper = str(value).strip().upper()
-    if upper in _CURRENCY_SYMBOLS and any(symbol in folded_text for symbol in _CURRENCY_SYMBOLS[upper]):
-        return True
     # No fuzzy matching for text: "RE-67859" is not "RE-6785". A value is verified only when the document
-    # says it literally (ignoring case and typography); anything else goes to a person.
-    return False
+    # says it literally (ignoring case and typography), or shows a currency's symbol for its code.
+    upper = str(value).strip().upper()
+    return upper in _CURRENCY_SYMBOLS and any(symbol in folded_text for symbol in _CURRENCY_SYMBOLS[upper])
 
 
 def verify_field(
