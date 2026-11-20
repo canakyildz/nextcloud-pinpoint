@@ -4,7 +4,7 @@ appinfo/info.xml so routes and version are never duplicated by hand."""
 import json
 import os
 import sys
-import xml.etree.ElementTree as ET  # noqa: S405 (our own file)
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 LEVELS = {"PUBLIC": 0, "USER": 1, "ADMIN": 2}

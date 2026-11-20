@@ -24,7 +24,7 @@ app = FastAPI()
 
 def _answer(prompt: str) -> str:
     # Pick the document whose identifying values all appear in the prompt.
-    for name, truth in sorted(TRUTHS.items()):
+    for _name, truth in sorted(TRUTHS.items()):
         fields = truth["fields"]
         keys = ("invoice_number", "supplier") if truth["template"] == "invoice" else ("merchant", "date")
         quotes = [fields[k]["quote"] for k in keys if fields.get(k, {}).get("quote")]
@@ -89,4 +89,4 @@ async def completions(request: Request) -> dict:
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)  # noqa: S104 (test container only)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
