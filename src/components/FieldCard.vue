@@ -4,11 +4,14 @@
 		@click="emit('select')"
 		@focusin="emit('select')">
 		<div class="field__head">
+			<span class="field__type" :title="typeLabel">
+				<NcIconSvgWrapper :path="typeIcon" :size="16" />
+			</span>
 			<span class="field__label">
 				{{ spec.label }}<span v-if="spec.required" class="field__required" :title="t('pinpoint', 'Required')">*</span>
 			</span>
 			<span class="badge" :title="statusInfo.hint">
-				<NcIconSvgWrapper :path="statusInfo.icon" :size="16" />
+				<NcIconSvgWrapper :path="statusInfo.icon" :size="15" />
 				{{ statusInfo.label }}
 			</span>
 		</div>
@@ -39,24 +42,34 @@
 			:model-value="stringValue"
 			:label="spec.label"
 			label-outside
+			:placeholder="status === 'missing' ? t('pinpoint', 'Not in the document') : ''"
 			:inputmode="spec.type === 'number' ? 'decimal' : undefined"
 			:disabled="readonly"
 			@update:model-value="(v: string | number) => emit('update:modelValue', String(v))" />
 
-		<p v-if="result?.anchor && !edited" class="field__source">
-			<span class="field__page">{{ t('pinpoint', 'Page {n}', { n: result.anchor.page + 1 }) }}</span>
-			“{{ result.anchor.matched_text }}”
-		</p>
-		<ul v-if="reasons.length" class="field__reasons">
+		<div v-if="result?.anchor && !edited" class="quote">
+			<span class="quote__page">{{ t('pinpoint', 'p. {n}', { n: result.anchor.page + 1 }) }}</span>
+			<span class="quote__text">{{ result.anchor.matched_text }}</span>
+		</div>
+		<ul v-if="reasons.length" class="reasons">
 			<li v-for="reason in reasons" :key="reason">
-				{{ reason }}
+				<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path :d="mdiInformationOutline" fill="currentColor" /></svg>
+				<span>{{ reason }}</span>
 			</li>
 		</ul>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { mdiPencilOutline } from '@mdi/js'
+import {
+	mdiCalendarBlankOutline,
+	mdiFormatListBulleted,
+	mdiFormatText,
+	mdiInformationOutline,
+	mdiPencilOutline,
+	mdiPound,
+	mdiToggleSwitchOutline,
+} from '@mdi/js'
 import { t } from '@nextcloud/l10n'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
 import NcDateTimePickerNative from '@nextcloud/vue/components/NcDateTimePickerNative'
@@ -80,6 +93,16 @@ const props = defineProps<{
 
 const emit = defineEmits<{ 'update:modelValue': [value: FormValue], select: [] }>()
 
+const TYPES = {
+	text: { icon: mdiFormatText, label: t('pinpoint', 'Text') },
+	number: { icon: mdiPound, label: t('pinpoint', 'Number') },
+	date: { icon: mdiCalendarBlankOutline, label: t('pinpoint', 'Date') },
+	selection: { icon: mdiFormatListBulleted, label: t('pinpoint', 'Choice') },
+	boolean: { icon: mdiToggleSwitchOutline, label: t('pinpoint', 'Yes or no') },
+}
+
+const typeIcon = computed(() => TYPES[props.spec.type].icon)
+const typeLabel = computed(() => TYPES[props.spec.type].label)
 const edited = computed(() => String(props.modelValue ?? '') !== String(props.original ?? ''))
 const status = computed(() => (edited.value ? 'edited' : props.result?.status ?? 'missing'))
 const statusInfo = computed(() => (edited.value
@@ -101,94 +124,144 @@ function isoDate(date: Date): string {
 <style scoped>
 .field {
 	--status-color: var(--color-text-maxcontrast);
-	padding: 10px 12px 12px;
+	--status-text: var(--color-text-maxcontrast);
+	padding: 12px 14px 14px;
 	border: 1px solid var(--color-border);
-	border-left: 4px solid var(--status-color);
-	border-radius: var(--border-radius-large, 10px);
+	border-radius: 14px;
 	background: var(--color-main-background);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 	cursor: pointer;
+	transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.field:hover {
+	box-shadow: 0 4px 16px rgba(30, 20, 80, 0.07);
 }
 
 .field--selected {
 	border-color: var(--status-color);
-	box-shadow: 0 0 0 1px var(--status-color);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-color) 22%, transparent), 0 6px 20px rgba(30, 20, 80, 0.08);
+	transform: translateY(-1px);
 }
 
 .field--verified {
 	--status-color: var(--color-element-success, #099f05);
+	--status-text: var(--color-success-text, #005416);
 }
 
 .field--review {
 	--status-color: var(--color-element-warning, #bf7900);
+	--status-text: var(--color-warning-text, #664700);
 }
 
 .field--unverified {
 	--status-color: var(--color-element-error, #c90000);
+	--status-text: var(--color-error-text, #8a0000);
 }
 
 .field--edited {
 	--status-color: var(--color-primary-element);
+	--status-text: var(--color-primary-element);
 }
 
 .field__head {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
 	gap: 8px;
-	margin-bottom: 6px;
+	margin-bottom: 8px;
+}
+
+.field__type {
+	display: inline-flex;
+	padding: 4px;
+	border-radius: 8px;
+	background: var(--color-background-hover);
+	color: var(--color-text-maxcontrast);
 }
 
 .field__label {
-	font-weight: bold;
+	flex: 1;
+	min-width: 0;
+	font-weight: 600;
 }
 
 .field__required {
-	color: var(--color-text-maxcontrast);
 	margin-left: 2px;
+	color: var(--color-text-maxcontrast);
 }
 
 .badge {
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
-	padding: 1px 8px 1px 6px;
-	border-radius: var(--border-radius-pill, 16px);
-	color: var(--status-color);
-	background: color-mix(in srgb, var(--status-color) 10%, transparent);
-	font-size: var(--font-size-small, 13px);
+	padding: 2px 9px 2px 7px;
+	border-radius: 999px;
+	color: var(--status-text);
+	background: color-mix(in srgb, var(--status-color) 13%, transparent);
+	font-size: 12px;
+	font-weight: 600;
 	white-space: nowrap;
 }
 
-.field--verified .badge {
-	color: var(--color-success-text, var(--status-color));
+.quote {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	margin-top: 10px;
+	padding: 6px 10px;
+	border-left: 3px solid var(--status-color);
+	border-radius: 0 8px 8px 0;
+	background: color-mix(in srgb, var(--status-color) 6%, var(--color-background-hover));
+	font-size: 13px;
 }
 
-.field--review .badge {
-	color: var(--color-warning-text, var(--status-color));
-}
-
-.field--unverified .badge {
-	color: var(--color-error-text, var(--status-color));
-}
-
-.field__source {
-	margin-top: 6px;
+.quote__page {
+	flex: none;
+	padding: 0 6px;
+	border-radius: 6px;
+	background: var(--color-main-background);
 	color: var(--color-text-maxcontrast);
-	font-size: var(--font-size-small, 13px);
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+.quote__text {
 	overflow-wrap: anywhere;
+	font-size: 13px;
 }
 
-.field__page {
-	font-weight: bold;
-	margin-right: 4px;
+.quote__text::before {
+	content: '“';
+	color: var(--color-text-maxcontrast);
 }
 
-.field__reasons {
-	margin-top: 4px;
-	font-size: var(--font-size-small, 13px);
+.quote__text::after {
+	content: '”';
+	color: var(--color-text-maxcontrast);
 }
 
-.field__reasons li::before {
-	content: '· ';
+.reasons {
+	margin-top: 8px;
+}
+
+.reasons li {
+	display: flex;
+	align-items: flex-start;
+	gap: 6px;
+	padding-left: 2px;
+	color: var(--status-text);
+	font-size: 12.5px;
+	line-height: 1.4;
+}
+
+.field--verified .reasons li {
+	color: var(--color-text-maxcontrast);
+}
+
+.reasons svg {
+	flex: none;
+	margin-top: 2px;
 }
 </style>

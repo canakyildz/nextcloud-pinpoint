@@ -15,10 +15,10 @@
 					:to="{ name: 'job', params: { id: job.id } }">
 					<template #icon>
 						<NcLoadingIcon v-if="job.status === 'queued' || job.status === 'running'" :size="20" />
-						<NcIconSvgWrapper v-else :path="jobIcon(job)" :class="`job-icon job-icon--${job.status}`" />
+						<NcIconSvgWrapper v-else :path="jobIcon(job)" :class="`job-icon job-icon--${jobTone(job)}`" />
 					</template>
 					<template #counter>
-						<span class="job-subtitle">{{ jobSubtitle(job) }}</span>
+						<span class="job-pill" :class="`job-pill--${jobTone(job)}`">{{ jobSubtitle(job) }}</span>
 					</template>
 				</NcAppNavigationItem>
 				<li v-if="store.jobs.length === 0" class="empty-nav">
@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { mdiAlertCircleOutline, mdiCheckAll, mdiFileDocumentCheckOutline, mdiPlus } from '@mdi/js'
+import { mdiFileAlertOutline, mdiFileCheckOutline, mdiFileDocumentEditOutline, mdiPlus } from '@mdi/js'
 import { t } from '@nextcloud/l10n'
 import NcAppContent from '@nextcloud/vue/components/NcAppContent'
 import NcAppNavigation from '@nextcloud/vue/components/NcAppNavigation'
@@ -55,10 +55,22 @@ import { refreshJobs, refreshState, store } from './store.ts'
 
 const router = useRouter()
 
+function needsCheck(job: Job): boolean {
+	return job.status === 'done' && !!job.summary && job.summary.review + job.summary.unverified > 0
+}
+
+function jobTone(job: Job): string {
+	if (job.status === 'failed') return 'error'
+	if (job.status === 'saved') return 'saved'
+	if (needsCheck(job)) return 'warning'
+	if (job.status === 'done') return 'success'
+	return 'pending'
+}
+
 function jobIcon(job: Job): string {
-	if (job.status === 'failed') return mdiAlertCircleOutline
-	if (job.status === 'saved') return mdiCheckAll
-	return mdiFileDocumentCheckOutline
+	if (job.status === 'failed') return mdiFileAlertOutline
+	if (needsCheck(job)) return mdiFileDocumentEditOutline
+	return mdiFileCheckOutline
 }
 
 function jobSubtitle(job: Job): string {
@@ -89,18 +101,42 @@ onBeforeUnmount(() => clearInterval(poller))
 </script>
 
 <style scoped>
-.job-subtitle {
+.job-pill {
+	padding: 1px 8px;
+	border-radius: 999px;
+	background: var(--color-background-dark);
 	color: var(--color-text-maxcontrast);
-	font-size: var(--font-size-small, 13px);
+	font-size: 12px;
+	font-weight: 600;
 	white-space: nowrap;
 }
 
-.job-icon--failed {
-	color: var(--color-error-text);
+.job-pill--warning {
+	color: var(--color-warning-text, #664700);
+	background: color-mix(in srgb, var(--color-element-warning, #bf7900) 14%, transparent);
 }
 
+.job-pill--success {
+	color: var(--color-success-text, #005416);
+	background: color-mix(in srgb, var(--color-element-success, #099f05) 13%, transparent);
+}
+
+.job-pill--error {
+	color: var(--color-error-text, #8a0000);
+	background: color-mix(in srgb, var(--color-element-error, #c90000) 12%, transparent);
+}
+
+.job-icon--warning {
+	color: var(--color-element-warning, #bf7900);
+}
+
+.job-icon--success,
 .job-icon--saved {
-	color: var(--color-success-text);
+	color: var(--color-element-success, #099f05);
+}
+
+.job-icon--error {
+	color: var(--color-element-error, #c90000);
 }
 
 .empty-nav {

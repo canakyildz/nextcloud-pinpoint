@@ -55,9 +55,11 @@ Net + tax didn't add up to the total either, and that check failed too.
   JSON with their page, text and position, plus a readable evidence list. Anything that uses TaskProcessing,
   Context Agent or Flow for example, can call it too.
 
-| Start an extraction | The Files action | The saved row, with its evidence |
-|---|---|---|
-| ![New extraction](screenshots/new.png) | ![Extract fields in the Files menu](screenshots/files-action.png) | ![A Tables row with Source and Evidence](screenshots/tables.png) |
+| Start an extraction | The Files action |
+|---|---|
+| ![New extraction](screenshots/new.png) | ![Extract fields in the Files menu](screenshots/files-action.png) |
+| **The saved row, with its evidence** | **Review in the dark theme** |
+| ![A Tables row with Source and Evidence](screenshots/tables.png) | ![The review screen in Nextcloud's dark theme](screenshots/review-dark.png) |
 
 ## Evaluation
 

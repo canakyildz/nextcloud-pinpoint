@@ -1,104 +1,172 @@
 <template>
-	<div class="new-extraction">
-		<h2>{{ t('pinpoint', 'Extract fields from documents') }}</h2>
-		<p class="lead">
-			{{ t('pinpoint', 'Pick invoices, receipts or other documents and the table to fill. Every value is shown next to the exact spot in the document it came from, and nothing is saved until you approve it.') }}
-		</p>
+	<div class="new">
+		<section class="hero">
+			<div class="hero__text">
+				<span class="hero__eyebrow">
+					<NcIconSvgWrapper :path="mdiCrosshairsGps" :size="16" />
+					Pinpoint
+				</span>
+				<h2>{{ t('pinpoint', 'Turn documents into table rows you can trust') }}</h2>
+				<p>
+					{{ t('pinpoint', 'Every value is shown on the page it came from. Pinpoint only marks a value verified when the document says exactly that, and nothing is saved until you approve it.') }}
+				</p>
+			</div>
+			<HeroIllustration class="hero__art" />
+		</section>
 
 		<NcNoteCard v-if="store.state && !store.state.textGenerationAvailable" type="error"
-			:heading="t('pinpoint', 'No text generation provider')">
+			:heading="t('pinpoint', 'No AI provider yet')">
 			{{ t('pinpoint', 'Pinpoint uses the AI provider configured in Nextcloud. Ask your admin to set one up under Administration → Artificial intelligence, for example the local llm2 app or the OpenAI and LocalAI integration.') }}
 		</NcNoteCard>
 		<NcNoteCard v-if="store.state?.tablesError" type="error">
 			{{ store.state.tablesError }}
 		</NcNoteCard>
 
-		<section class="step">
-			<h3><span class="step__number">1</span> {{ t('pinpoint', 'Documents') }}</h3>
-			<ul v-if="files.length" class="files">
-				<li v-for="file in files" :key="file.id">
-					<NcIconSvgWrapper :path="file.mime === 'application/pdf' ? mdiFilePdfBox : mdiFileImageOutline" />
-					<span class="files__name">{{ file.name }}</span>
-					<NcButton variant="tertiary" :aria-label="t('pinpoint', 'Remove {name}', { name: file.name })"
-						@click="files = files.filter((f) => f.id !== file.id)">
-						<template #icon>
-							<NcIconSvgWrapper :path="mdiClose" />
-						</template>
-					</NcButton>
-				</li>
-			</ul>
-			<NcButton @click="pickFiles">
-				<template #icon>
-					<NcIconSvgWrapper :path="mdiFolderOpenOutline" />
-				</template>
-				{{ files.length ? t('pinpoint', 'Add more documents') : t('pinpoint', 'Choose from Files') }}
-			</NcButton>
-			<p class="hint">
-				{{ t('pinpoint', 'PDF files and images (scans, photos). In Files you can also right-click a document and choose “Extract fields”.') }}
-			</p>
-		</section>
+		<div class="steps">
+			<section class="card">
+				<header class="card__head">
+					<span class="card__step">1</span>
+					<div>
+						<h3>{{ t('pinpoint', 'Documents') }}</h3>
+						<p>{{ t('pinpoint', 'PDFs, scans and photos') }}</p>
+					</div>
+				</header>
 
-		<section class="step">
-			<h3><span class="step__number">2</span> {{ t('pinpoint', 'Table to fill') }}</h3>
-			<NcSelect v-model="selectedTable"
-				class="table-select"
-				:options="tableOptions"
-				label="label"
-				:input-label="t('pinpoint', 'Table')"
-				:placeholder="t('pinpoint', 'Choose a table')"
-				:clearable="false" />
-			<div class="templates">
-				<span class="hint">{{ t('pinpoint', 'Or start a new table:') }}</span>
-				<NcButton v-for="template in store.state?.templates ?? []"
-					:key="template.id"
-					variant="secondary"
-					:disabled="creatingTable"
-					@click="createTable(template.id, template.name)">
-					<template #icon>
-						<NcIconSvgWrapper :path="mdiTablePlus" />
-					</template>
-					{{ template.name === 'Invoice' ? t('pinpoint', 'Invoices') : t('pinpoint', 'Receipts') }}
-				</NcButton>
-			</div>
-			<NcNoteCard v-if="schemaError" type="warning">
-				{{ schemaError }}
-			</NcNoteCard>
-			<div v-else-if="schema" class="schema">
-				<p class="hint">
-					{{ t('pinpoint', 'Pinpoint will look for one value per column. Column descriptions in Tables tell it what to look for.') }}
-				</p>
-				<ul class="schema__fields">
+				<button type="button" class="dropzone" @click="pickFiles">
+					<span class="dropzone__icon">
+						<NcIconSvgWrapper :path="mdiFileDocumentMultipleOutline" :size="28" />
+					</span>
+					<strong>{{ files.length ? t('pinpoint', 'Add more documents') : t('pinpoint', 'Choose from Files') }}</strong>
+					<span class="dropzone__hint">{{ t('pinpoint', 'or right-click a document in Files and choose “Extract fields”') }}</span>
+				</button>
+
+				<TransitionGroup tag="ul" name="chip" class="files">
+					<li v-for="file in files" :key="file.id" class="file">
+						<span class="file__icon" :class="file.mime === 'application/pdf' ? 'file__icon--pdf' : 'file__icon--image'">
+							<NcIconSvgWrapper :path="file.mime === 'application/pdf' ? mdiFilePdfBox : mdiFileImageOutline" :size="20" />
+						</span>
+						<span class="file__name">{{ file.name }}</span>
+						<span v-if="file.size" class="file__size">{{ formatSize(file.size) }}</span>
+						<NcButton variant="tertiary-no-background"
+							size="small"
+							:aria-label="t('pinpoint', 'Remove {name}', { name: file.name })"
+							@click="files = files.filter((f) => f.id !== file.id)">
+							<template #icon>
+								<NcIconSvgWrapper :path="mdiClose" :size="18" />
+							</template>
+						</NcButton>
+					</li>
+				</TransitionGroup>
+			</section>
+
+			<section class="card">
+				<header class="card__head">
+					<span class="card__step">2</span>
+					<div>
+						<h3>{{ t('pinpoint', 'Table to fill') }}</h3>
+						<p>{{ t('pinpoint', 'Its columns are what Pinpoint looks for') }}</p>
+					</div>
+				</header>
+
+				<NcSelect v-if="tableOptions.length"
+					v-model="selectedTable"
+					class="table-select"
+					:options="tableOptions"
+					label="label"
+					:input-label="t('pinpoint', 'Table')"
+					:placeholder="t('pinpoint', 'Choose a table')"
+					:clearable="false" />
+
+				<NcNoteCard v-if="schemaError" type="warning">
+					{{ schemaError }}
+				</NcNoteCard>
+				<ul v-else-if="schema" class="fields">
 					<li v-for="field in schema.fields" :key="field.key" :title="field.description">
+						<NcIconSvgWrapper :path="typeIcon(field.type)" :size="16" />
 						{{ field.label }}
-						<span class="schema__type">{{ typeLabel(field.type) }}</span>
 					</li>
 				</ul>
-			</div>
-		</section>
 
-		<div class="actions">
-			<NcButton variant="primary" :disabled="!canStart" @click="start">
+				<p class="templates__title">
+					{{ tableOptions.length ? t('pinpoint', 'Or start a new table from a template') : t('pinpoint', 'Start with a table made for it') }}
+				</p>
+				<div class="templates">
+					<button v-for="template in store.state?.templates ?? []"
+						:key="template.id"
+						type="button"
+						class="template"
+						:disabled="creatingTable"
+						@click="createTable(template.id, template.name)">
+						<span class="template__icon" :class="`template__icon--${template.id.split(':')[1]}`">
+							<NcIconSvgWrapper :path="template.name === 'Invoice' ? mdiFileDocumentOutline : mdiReceiptTextOutline" :size="22" />
+						</span>
+						<span class="template__text">
+							<strong>{{ templateTitle(template.name) }}</strong>
+							<span>{{ template.fields.map((f) => f.label).slice(0, 4).join(', ') }}…</span>
+						</span>
+						<NcIconSvgWrapper :path="mdiTablePlus" :size="20" class="template__add" />
+					</button>
+				</div>
+			</section>
+		</div>
+
+		<ol class="how">
+			<li>
+				<NcIconSvgWrapper :path="mdiTextRecognition" :size="22" />
+				<span>{{ t('pinpoint', 'Reads every word and where it is on the page, with OCR for scans') }}</span>
+			</li>
+			<li>
+				<NcIconSvgWrapper :path="mdiCreationOutline" :size="22" />
+				<span>{{ t('pinpoint', 'Your Nextcloud’s AI proposes each value, quoting the text it read') }}</span>
+			</li>
+			<li>
+				<NcIconSvgWrapper :path="mdiShieldCheckOutline" :size="22" />
+				<span>{{ t('pinpoint', 'Pinpoint checks every value against the page before you see it') }}</span>
+			</li>
+		</ol>
+
+		<footer class="cta">
+			<p class="cta__summary">
+				<template v-if="files.length && selectedTable">
+					{{ n('pinpoint', '{n} document into {table}', '{n} documents into {table}', files.length, { n: files.length, table: selectedTable.label }) }}
+				</template>
+				<template v-else>
+					{{ t('pinpoint', 'Choose documents and a table to start.') }}
+				</template>
+			</p>
+			<NcButton variant="primary" size="large" :disabled="!canStart" @click="start">
 				<template #icon>
 					<NcLoadingIcon v-if="starting" :size="20" />
-					<NcIconSvgWrapper v-else :path="mdiTextBoxSearchOutline" />
+					<NcIconSvgWrapper v-else :path="mdiArrowRight" />
 				</template>
-				{{ files.length > 1 ? t('pinpoint', 'Extract from {n} documents', { n: files.length }) : t('pinpoint', 'Extract') }}
+				{{ t('pinpoint', 'Extract') }}
 			</NcButton>
-		</div>
+		</footer>
 	</div>
 </template>
 
 <script setup lang="ts">
 import {
+	mdiArrowRight,
+	mdiCalendarBlankOutline,
 	mdiClose,
+	mdiCreationOutline,
+	mdiCrosshairsGps,
+	mdiFileDocumentMultipleOutline,
+	mdiFileDocumentOutline,
 	mdiFileImageOutline,
 	mdiFilePdfBox,
-	mdiFolderOpenOutline,
+	mdiFormatListBulleted,
+	mdiFormatText,
+	mdiPound,
+	mdiReceiptTextOutline,
+	mdiShieldCheckOutline,
 	mdiTablePlus,
-	mdiTextBoxSearchOutline,
+	mdiTextRecognition,
+	mdiToggleSwitchOutline,
 } from '@mdi/js'
 import { getFilePickerBuilder, showError, showSuccess } from '@nextcloud/dialogs'
-import { t } from '@nextcloud/l10n'
+import { n, t } from '@nextcloud/l10n'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcIconSvgWrapper from '@nextcloud/vue/components/NcIconSvgWrapper'
 import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
@@ -107,6 +175,7 @@ import NcSelect from '@nextcloud/vue/components/NcSelect'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api, errorMessage, type FieldType, type FileRef, type Schema } from '../api.ts'
+import HeroIllustration from '../components/HeroIllustration.vue'
 import { refreshState, store, upsertJob } from '../store.ts'
 
 const SUPPORTED_MIMES = ['application/pdf', 'image/png', 'image/jpeg', 'image/tiff', 'image/webp']
@@ -132,14 +201,23 @@ const tableOptions = computed<TableOption[]>(() => (store.state?.tables ?? []).m
 const canStart = computed(() => files.value.length > 0 && schema.value !== null && !starting.value
 	&& store.state?.textGenerationAvailable !== false)
 
-function typeLabel(type: FieldType): string {
+function typeIcon(type: FieldType): string {
 	return {
-		text: t('pinpoint', 'text'),
-		number: t('pinpoint', 'number'),
-		date: t('pinpoint', 'date'),
-		selection: t('pinpoint', 'choice'),
-		boolean: t('pinpoint', 'yes/no'),
+		text: mdiFormatText,
+		number: mdiPound,
+		date: mdiCalendarBlankOutline,
+		selection: mdiFormatListBulleted,
+		boolean: mdiToggleSwitchOutline,
 	}[type]
+}
+
+function templateTitle(name: string): string {
+	return name === 'Invoice' ? t('pinpoint', 'Invoices') : t('pinpoint', 'Receipts')
+}
+
+function formatSize(bytes: number): string {
+	if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
+	return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
 function addFiles(added: FileRef[]): void {
@@ -155,7 +233,9 @@ async function pickFiles(): Promise<void> {
 		.addButton({
 			label: t('pinpoint', 'Choose'),
 			variant: 'primary',
-			callback: (nodes) => addFiles(nodes.map((node) => ({ id: node.fileid as number, name: node.basename, mime: node.mime }))),
+			callback: (nodes) => addFiles(nodes.map((node) => ({
+				id: node.fileid as number, name: node.basename, mime: node.mime, size: node.size,
+			}))),
 		})
 		.build()
 	try {
@@ -168,8 +248,7 @@ async function pickFiles(): Promise<void> {
 async function createTable(templateId: string, name: string): Promise<void> {
 	creatingTable.value = true
 	try {
-		const title = name === 'Invoice' ? t('pinpoint', 'Invoices') : t('pinpoint', 'Receipts')
-		const table = await api.createTable(templateId, title)
+		const table = await api.createTable(templateId, templateTitle(name))
 		await refreshState()
 		selectedTable.value = tableOptions.value.find((o) => o.id === table.id) ?? null
 		showSuccess(t('pinpoint', 'Created the table “{title}” in Tables', { title: table.title }))
@@ -240,110 +319,355 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.new-extraction {
-	max-width: 760px;
+.new {
+	--pp-brand: #7c6cf2;
+	--pp-brand-2: #1fb5ac;
+	max-width: 980px;
 	margin: 0 auto;
-	padding: 24px 24px 64px 56px;
+	padding: 20px 28px 40px 56px;
 }
 
-h2 {
-	margin-top: 8px;
+.hero {
+	display: grid;
+	grid-template-columns: minmax(0, 1.4fr) minmax(200px, 1fr);
+	align-items: center;
+	gap: 24px;
+	padding: 28px 32px;
+	margin-bottom: 20px;
+	border-radius: 20px;
+	background:
+		radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--pp-brand-2) 18%, transparent), transparent 60%),
+		radial-gradient(120% 140% at 0% 100%, color-mix(in srgb, var(--pp-brand) 16%, transparent), transparent 60%),
+		var(--color-main-background);
+	border: 1px solid color-mix(in srgb, var(--pp-brand) 18%, var(--color-border));
 }
 
-.lead {
+.hero__eyebrow {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 10px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--pp-brand) 14%, transparent);
+	color: color-mix(in srgb, var(--pp-brand) 75%, var(--color-main-text));
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+}
+
+.hero h2 {
+	margin: 12px 0 8px;
+	font-size: 26px;
+	line-height: 1.25;
+	font-weight: 700;
+}
+
+.hero p {
 	color: var(--color-text-maxcontrast);
-	margin-bottom: 24px;
+	font-size: 15px;
+	line-height: 1.55;
+	max-width: 520px;
 }
 
-.step {
-	margin-bottom: 28px;
+.hero__art {
+	justify-self: center;
 }
 
-.step h3 {
+.steps {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px;
+}
+
+.card {
+	padding: 20px;
+	border-radius: 16px;
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 20px rgba(30, 20, 80, 0.05);
+}
+
+.card__head {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	font-size: 1.1em;
+	gap: 12px;
+	margin-bottom: 16px;
 }
 
-.step__number {
+.card__head h3 {
+	margin: 0;
+	font-size: 17px;
+}
+
+.card__head p {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+.card__step {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 24px;
-	height: 24px;
+	flex: none;
+	width: 32px;
+	height: 32px;
+	border-radius: 10px;
+	background: linear-gradient(135deg, var(--pp-brand), var(--pp-brand-2));
+	color: #fff;
+	font-weight: 700;
+}
+
+.dropzone {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	width: 100%;
+	margin: 0;
+	padding: 22px 16px;
+	border: 2px dashed color-mix(in srgb, var(--pp-brand) 35%, var(--color-border));
+	border-radius: 14px;
+	background: color-mix(in srgb, var(--pp-brand) 4%, transparent);
+	color: var(--color-main-text);
+	cursor: pointer;
+	transition: background 0.15s, border-color 0.15s;
+}
+
+.dropzone:hover,
+.dropzone:focus-visible {
+	border-color: var(--pp-brand);
+	background: color-mix(in srgb, var(--pp-brand) 9%, transparent);
+}
+
+.dropzone__icon {
+	display: inline-flex;
+	padding: 10px;
 	border-radius: 50%;
-	background: var(--color-primary-element);
-	color: var(--color-primary-element-text);
-	font-size: 0.85em;
-	font-weight: bold;
+	background: var(--color-main-background);
+	color: var(--pp-brand);
+	box-shadow: 0 4px 12px rgba(30, 20, 80, 0.1);
+}
+
+.dropzone strong {
+	font-size: 15px;
+}
+
+.dropzone__hint {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+	font-weight: normal;
+	text-align: center;
 }
 
 .files {
-	margin: 8px 0 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-top: 12px;
 }
 
-.files li {
+.file {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	padding: 2px 0;
+	gap: 10px;
+	padding: 6px 6px 6px 8px;
+	border-radius: 10px;
+	background: var(--color-background-hover);
 }
 
-.files__name {
+.file__icon {
+	display: inline-flex;
+	padding: 5px;
+	border-radius: 8px;
+}
+
+.file__icon--pdf {
+	color: #d93a3a;
+	background: color-mix(in srgb, #d93a3a 12%, transparent);
+}
+
+.file__icon--image {
+	color: #2f80ed;
+	background: color-mix(in srgb, #2f80ed 12%, transparent);
+}
+
+.file__name {
 	flex: 1;
+	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	font-weight: 500;
 }
 
-.hint {
+.file__size {
 	color: var(--color-text-maxcontrast);
-	font-size: var(--font-size-small, 13px);
-	margin-top: 6px;
+	font-size: 12px;
 }
 
 .table-select {
 	width: 100%;
-	max-width: 420px;
 }
 
-.templates {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 8px;
-	margin: 12px 0;
-}
-
-.templates .hint {
-	margin: 0 4px 0 0;
-}
-
-.schema__fields {
+.fields {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 6px;
-	margin-top: 8px;
+	margin: 12px 0 4px;
 }
 
-.schema__fields li {
-	padding: 4px 10px;
-	border-radius: var(--border-radius-pill, 16px);
-	background: var(--color-background-dark);
+.fields li {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 4px 10px 4px 8px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--pp-brand) 8%, var(--color-background-hover));
+	font-size: 13px;
 	cursor: default;
 }
 
-.schema__type {
-	color: var(--color-text-maxcontrast);
-	font-size: 0.85em;
-	margin-left: 4px;
+.fields li :deep(svg) {
+	color: color-mix(in srgb, var(--pp-brand) 70%, var(--color-text-maxcontrast));
 }
 
-.actions {
+.templates__title {
+	margin: 18px 0 8px;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+.templates {
+	display: grid;
+	gap: 8px;
+}
+
+.template {
+	box-sizing: border-box;
 	display: flex;
-	justify-content: flex-end;
-	border-top: 1px solid var(--color-border);
-	padding-top: 16px;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+	margin: 0;
+	padding: 10px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: 12px;
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	text-align: start;
+	cursor: pointer;
+	transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.template:hover,
+.template:focus-visible {
+	border-color: var(--pp-brand);
+	box-shadow: 0 4px 14px rgba(30, 20, 80, 0.08);
+	transform: translateY(-1px);
+}
+
+.template__icon {
+	display: inline-flex;
+	padding: 8px;
+	border-radius: 10px;
+}
+
+.template__icon--invoice {
+	color: var(--pp-brand);
+	background: color-mix(in srgb, var(--pp-brand) 13%, transparent);
+}
+
+.template__icon--receipt {
+	color: var(--pp-brand-2);
+	background: color-mix(in srgb, var(--pp-brand-2) 15%, transparent);
+}
+
+.template__text {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.template__text span {
+	overflow: hidden;
+	font-weight: normal;
+	color: var(--color-text-maxcontrast);
+	font-size: 12px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.template__add {
+	color: var(--color-text-maxcontrast);
+}
+
+.how {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 12px;
+	margin: 20px 0;
+	padding: 0;
+	list-style: none;
+	counter-reset: how;
+}
+
+.how li {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 12px 14px;
+	border-radius: 12px;
+	background: var(--color-background-hover);
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+	line-height: 1.45;
+}
+
+.how li :deep(svg) {
+	flex: none;
+	color: var(--pp-brand);
+}
+
+.cta {
+	position: sticky;
+	bottom: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 12px 12px 12px 20px;
+	border-radius: 16px;
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	box-shadow: 0 8px 28px rgba(30, 20, 80, 0.1);
+}
+
+.cta__summary {
+	color: var(--color-text-maxcontrast);
+}
+
+.chip-enter-active,
+.chip-leave-active {
+	transition: opacity 0.2s, transform 0.2s;
+}
+
+.chip-enter-from,
+.chip-leave-to {
+	opacity: 0;
+	transform: translateY(-4px);
+}
+
+@media (max-width: 900px) {
+	.hero,
+	.steps,
+	.how {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.hero__art {
+		display: none;
+	}
 }
 </style>

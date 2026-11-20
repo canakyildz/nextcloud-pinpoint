@@ -51,7 +51,25 @@ if (flagged) {
 	const card = page.locator('.field', { hasText: process.env.REVIEW_FIELD ?? 'Tax amount' })
 	await card.click()
 	await page.waitForTimeout(900)
+	await page.evaluate(() => document.querySelector('#app-content-vue')?.scrollTo(0, 0))
+	await page.waitForTimeout(300)
 	await page.screenshot({ path: join(out, 'review.png') })
+
+	// The same screen in Nextcloud's dark theme
+	const theme = (method) => page.request.fetch(`${base}/ocs/v2.php/apps/theming/api/v1/theme/dark${method === 'PUT' ? '/enable' : ''}`,
+		{ method, headers: { 'OCS-APIRequest': 'true' } })
+	await theme('PUT')
+	await page.reload()
+	await page.waitForSelector('.review')
+	await settle()
+	await page.locator('.field', { hasText: process.env.REVIEW_FIELD ?? 'Tax amount' }).click()
+	await page.waitForTimeout(900)
+	await page.evaluate(() => document.querySelector('#app-content-vue')?.scrollTo(0, 0))
+	await page.screenshot({ path: join(out, 'review-dark.png') })
+	await theme('DELETE')
+	await page.reload()
+	await page.waitForSelector('.review')
+	await settle()
 
 	// Animated tour: click through a few fields so the highlight jumps across the page.
 	const frames = mkdtempSync(join(tmpdir(), 'pinpoint-gif-'))
@@ -69,10 +87,13 @@ if (flagged) {
 	rmSync(frames, { recursive: true })
 }
 
-// 2. Starting an extraction, as the Files action opens it
-const fileIds = jobs.slice(0, 2).map((job) => job.fileId).join(',')
+// 2. Starting an extraction, as the Files action opens it (with the invoice table remembered)
+const invoices = jobs.filter((job) => job.schemaName === 'Invoices')
+const fileIds = invoices.slice(0, 2).map((job) => job.fileId).join(',')
+await page.goto(`${base}/index.php/apps/app_api/embedded/pinpoint/main/new`)
+await page.evaluate((id) => localStorage.setItem('pinpoint:lastTable', String(id)), invoices[0]?.tableId)
 await page.goto(`${base}/index.php/apps/app_api/embedded/pinpoint/main/new?fileIds=${fileIds}`)
-await page.waitForSelector('.schema__fields')
+await page.waitForSelector('.fields')
 await settle()
 await page.screenshot({ path: join(out, 'new.png') })
 
