@@ -1,0 +1,77 @@
+# Publishes a release when a GitHub release is published (tag vX.Y.Z matching appinfo/info.xml):
+#   1. multi-arch ExApp image to ghcr.io (the image AppAPI deploys)
+#   2. the App Store tarball, attached to the GitHub release
+#   3. the signed release to apps.nextcloud.com, only when the App Store secrets exist
+# Secrets: APP_PRIVATE_KEY (the app's signing key), APP_CERTIFICATE (the .crt from
+# nextcloud/app-certificate-requests), APPSTORE_TOKEN (apps.nextcloud.com account token).
+# See docs/PUBLISHING.md.
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag must match the version in info.xml
+        id: version
+        run: |
+          version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' appinfo/info.xml | head -1)
+          test "${GITHUB_REF_NAME}" = "v${version}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push the ExApp image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: release
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/nextcloud-pinpoint:${{ steps.version.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/nextcloud-pinpoint:latest
+
+      - name: Package the App Store tarball
+        run: make appstore
+
+      - name: Sign the release (only when the signing key is configured)
+        id: sign
+        env:
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+        run: |
+          if [ -z "$APP_PRIVATE_KEY" ]; then echo "No signing key; skipping App Store upload."; exit 0; fi
+          printf '%s\n' "$APP_PRIVATE_KEY" > pinpoint.key
+          echo "signature=$(openssl dgst -sha512 -sign pinpoint.key build/appstore/pinpoint.tar.gz | openssl base64 -A)" >> "$GITHUB_OUTPUT"
+          rm pinpoint.key
+
+      - name: Attach the tarball to the GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$GITHUB_REF_NAME" build/appstore/pinpoint.tar.gz --clobber
+
+      - name: Publish to the Nextcloud App Store
+        if: steps.sign.outputs.signature != ''
+        env:
+          APPSTORE_TOKEN: ${{ secrets.APPSTORE_TOKEN }}
+          SIGNATURE: ${{ steps.sign.outputs.signature }}
+        run: |
+          test -n "$APPSTORE_TOKEN"
+          download="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/pinpoint.tar.gz"
+          jq -n --arg d "$download" --arg s "$SIGNATURE" '{download: $d, signature: $s, nightly: false}' \
+            | curl -fsS -X POST https://apps.nextcloud.com/api/v1/apps/releases \
+                -H "Authorization: Token $APPSTORE_TOKEN" -H "Content-Type: application/json" --data @-

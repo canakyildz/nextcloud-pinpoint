@@ -12,7 +12,7 @@ from datetime import date
 from typing import Any
 
 from .anchor import DocumentIndex
-from .model import CheckResult, FieldResult, FieldSpec, FieldStatus, FieldType, Schema
+from .model import CheckResult, FieldResult, FieldSpec, FieldStatus, FieldType, Schema, TextSource
 from .values import (
     DateOrder,
     DecimalHint,
@@ -158,6 +158,9 @@ def verify_field(
     if spec.type == FieldType.DATE and order is None and is_ambiguous_date(anchor.matched_text):
         status = FieldStatus.REVIEW
         reasons.append("The date could be day/month or month/day; the document gives no other hint.")
+    if status == FieldStatus.VERIFIED and index.document.pages[anchor.page].source == TextSource.OCR:
+        # OCR can be confidently wrong too (a dropped umlaut reads at 90% confidence), so say what was checked.
+        reasons.append("Matched against the text OCR read from this scan. Check accents and similar letters.")
     return FieldResult(spec.key, value, raw, quote, status, reasons, anchor)
 
 

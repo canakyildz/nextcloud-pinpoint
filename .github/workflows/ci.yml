@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python · lint, types, tests, evals
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install Tesseract (scans in tests and evals)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-deu tesseract-ocr-fra
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check ex_app tests evals dev
+      - run: ruff format --check ex_app tests evals dev
+      - run: mypy
+      - run: pytest
+      - name: Verification layer eval (fails below the thresholds in evals/run.py)
+        run: python evals/run.py oracle --check --report "$GITHUB_STEP_SUMMARY"
+
+  frontend:
+    name: Frontend · types and build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - name: The bundle must stay a single classic script (AppAPI loads it without type=module)
+        run: |
+          test -f ex_app/js/pinpoint-main.js && test -f ex_app/js/pinpoint-main.css
+          ! grep -q '^import ' ex_app/js/pinpoint-main.js
+
+  appinfo:
+    name: App Store metadata
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libxml2-utils xsltproc
+      - name: Validate info.xml the way the App Store does (XSLT, then XSD)
+        run: |
+          curl -fsSL https://apps.nextcloud.com/schema/apps/info.xsd -o /tmp/info.xsd
+          curl -fsSL https://raw.githubusercontent.com/nextcloud/appstore/master/nextcloudappstore/api/v1/release/pre-info.xslt -o /tmp/pre-info.xslt
+          xsltproc /tmp/pre-info.xslt appinfo/info.xml | xmllint --noout --schema /tmp/info.xsd -
+      - name: One version everywhere
+        run: |
+          v=$(xmllint --xpath 'string(/info/version)' appinfo/info.xml)
+          tag=$(xmllint --xpath 'string(//image-tag)' appinfo/info.xml)
+          py=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' ex_app/lib/pinpoint/__init__.py)
+          npm=$(node -p "require('./package.json').version")
+          toml=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
+          echo "info.xml=$v image-tag=$tag python=$py npm=$npm pyproject=$toml"
+          test "$v" = "$tag" && test "$v" = "$py" && test "$v" = "$npm" && test "$v" = "$toml"
+
+  image:
+    name: Release image · build and smoke test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: release
+          load: true
+          tags: pinpoint:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Starts, answers the heartbeat, refuses unauthenticated calls, has OCR
+        run: |
+          docker run -d --name pinpoint -p 23000:23000 \
+            -e APP_ID=pinpoint -e APP_VERSION=0.1.0 -e APP_SECRET=ci-secret-0123456789 \
+            -e APP_HOST=0.0.0.0 -e APP_PORT=23000 -e NEXTCLOUD_URL=http://localhost pinpoint:ci
+          for _ in $(seq 1 30); do curl -fs localhost:23000/heartbeat && break; sleep 1; done
+          test "$(curl -s -o /dev/null -w '%{http_code}' localhost:23000/api/jobs)" = 401
+          docker exec pinpoint tesseract --list-langs | grep -q deu
+          docker exec pinpoint test -f /ex_app/js/pinpoint-main.js
+
+  integration:
+    name: Nextcloud ${{ matrix.nextcloud }} · integration
+    needs: python
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        nextcloud: ["33", "34", "35"]
+    env:
+      NEXTCLOUD_TAG: ${{ matrix.nextcloud }}-apache
+      COMPOSE: docker compose -f dev/docker-compose.yml -f tests/integration/docker-compose.ci.yml
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - name: Start Nextcloud, Pinpoint (manual-install ExApp) and the mock model
+        run: $COMPOSE up -d --build --wait nextcloud pinpoint mockllm taskworker cron
+      - name: Install Tables and the OpenAI integration, register Pinpoint with AppAPI
+        run: dev/setup.sh
+        env:
+          LLM_URL: http://mockllm:8000/v1
+          LLM_MODEL: mock-model
+          WITH_ASSISTANT: "0"
+      - run: pytest -m integration tests/integration -v
+      - name: Logs
+        if: failure()
+        run: |
+          $COMPOSE logs pinpoint mockllm taskworker | tail -200
+          $COMPOSE exec -T nextcloud tail -n 50 /var/www/html/data/nextcloud.log

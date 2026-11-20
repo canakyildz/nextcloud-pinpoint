@@ -204,7 +204,9 @@ def expected_status(case: Case, key: str) -> frozenset[FieldStatus]:
 
 def downgraded_by_check(result: FieldResult) -> bool:
     """A correct value sent to review because a cross-field check failed on a neighbour."""
-    return result.status == FieldStatus.REVIEW and all(r.startswith("Check failed") for r in result.reasons)
+    return result.status == FieldStatus.REVIEW and all(
+        r.startswith(("Check failed", "Matched against the text OCR")) for r in result.reasons
+    )
 
 
 async def run_oracle(cases: list[Case], options: PipelineOptions) -> dict[str, Any]:
