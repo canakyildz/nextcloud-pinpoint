@@ -8,48 +8,92 @@
 
 		<template v-else-if="job">
 			<header class="head">
-				<span class="head__icon" :class="job.mime === 'application/pdf' ? 'head__icon--pdf' : 'head__icon--image'">
-					<NcIconSvgWrapper :path="job.mime === 'application/pdf' ? mdiFilePdfBox : mdiFileImageOutline" :size="26" />
-				</span>
-				<div class="head__title">
-					<h2>{{ job.fileName }}</h2>
-					<p class="head__meta">
-						<a :href="fileUrl" target="_blank" rel="noopener">
-							{{ t('pinpoint', 'Open in Files') }}
-							<NcIconSvgWrapper :path="mdiOpenInNew" :size="14" inline />
-						</a>
-						<span class="head__table">
-							<NcIconSvgWrapper :path="mdiTableLarge" :size="14" inline />
-							{{ job.schemaName }}
-						</span>
-					</p>
+				<div class="head__top">
+					<div class="head__title">
+						<p class="head__crumb pp-mono">
+							{{ job.schemaName }} /
+						</p>
+						<h2>{{ job.fileName }}</h2>
+					</div>
+					<NcButton :href="fileUrl" target="_blank">
+						<template #icon>
+							<NcIconSvgWrapper :path="mdiOpenInNew" :size="16" />
+						</template>
+						{{ t('pinpoint', 'Open in Files') }}
+					</NcButton>
+					<NcButton variant="tertiary" :aria-label="t('pinpoint', 'Delete this extraction')" @click="remove">
+						<template #icon>
+							<NcIconSvgWrapper :path="mdiTrashCanOutline" :size="18" />
+						</template>
+					</NcButton>
 				</div>
-				<TrustBar v-if="extraction" class="head__trust" :summary="extraction.summary" />
-				<NcButton variant="tertiary" :aria-label="t('pinpoint', 'Delete this extraction')" @click="remove">
-					<template #icon>
-						<NcIconSvgWrapper :path="mdiTrashCanOutline" />
-					</template>
-				</NcButton>
+				<dl class="meta">
+					<div>
+						<dt>{{ t('pinpoint', 'Status') }}</dt>
+						<dd>
+							<span class="pp-dot" :class="[`pp-dot--${jobTone(job)}`, { 'pp-dot--pulse': isPending(job) }]" />
+							{{ jobLabel(job) }}
+						</dd>
+					</div>
+					<div>
+						<dt>{{ t('pinpoint', 'Table') }}</dt>
+						<dd>{{ job.schemaName }}</dd>
+					</div>
+					<div v-if="extraction">
+						<dt>{{ t('pinpoint', 'Pages') }}</dt>
+						<dd class="pp-mono">
+							{{ extraction.pages.length }}<span v-if="ocrPages" class="meta__soft"> · OCR</span>
+						</dd>
+					</div>
+					<div>
+						<dt>{{ t('pinpoint', 'Started') }}</dt>
+						<dd class="pp-mono">
+							{{ startedAt }}
+						</dd>
+					</div>
+					<div v-if="extraction" class="meta__trust">
+						<dt>{{ t('pinpoint', 'Fields') }}</dt>
+						<dd><TrustBar :summary="extraction.summary" /></dd>
+					</div>
+				</dl>
 			</header>
 
-			<section v-if="job.status === 'queued' || job.status === 'running'" class="state">
-				<ScanIllustration />
-				<h3>{{ job.status === 'queued' ? t('pinpoint', 'Waiting for its turn…') : t('pinpoint', 'Reading the document…') }}</h3>
-				<p>{{ t('pinpoint', 'Your Nextcloud’s AI provider is reading it, then Pinpoint checks every value against the page. A local model can take a minute or two, and you will get a notification when it is done.') }}</p>
-			</section>
+			<template v-if="isPending(job)">
+				<section class="box pending">
+					<div class="pending__head">
+						<span class="pp-dot pp-dot--amber pp-dot--pulse" />
+						<strong>{{ job.status === 'queued' ? t('pinpoint', 'Waiting for its turn') : t('pinpoint', 'Reading the document') }}</strong>
+						<span class="pending__time pp-mono">{{ elapsed }}</span>
+					</div>
+					<p>{{ t('pinpoint', 'Your Nextcloud’s AI provider is reading it, then Pinpoint checks every value against the page. A local model can take a minute or two, and you will get a notification when it is done.') }}</p>
+				</section>
+				<div class="review review--skeleton" aria-hidden="true">
+					<div class="desk">
+						<div class="skeleton skeleton--page" />
+					</div>
+					<div class="list">
+						<div v-for="i in 5" :key="i" class="skeleton-row">
+							<div class="skeleton skeleton--label" />
+							<div class="skeleton skeleton--input" />
+						</div>
+					</div>
+				</div>
+			</template>
 
-			<section v-else-if="job.status === 'failed'" class="state state--error">
-				<span class="state__icon">
-					<NcIconSvgWrapper :path="mdiFileAlertOutline" :size="40" />
-				</span>
-				<h3>{{ t('pinpoint', 'This document could not be read') }}</h3>
-				<p>{{ job.error }}</p>
-				<NcButton variant="primary" @click="retry">
-					<template #icon>
-						<NcIconSvgWrapper :path="mdiRefresh" />
-					</template>
-					{{ t('pinpoint', 'Try again') }}
-				</NcButton>
+			<section v-else-if="job.status === 'failed'" class="box failed">
+				<div class="pending__head">
+					<span class="pp-dot pp-dot--red" />
+					<strong>{{ t('pinpoint', 'This document could not be read') }}</strong>
+				</div>
+				<pre class="log pp-mono">{{ job.error }}</pre>
+				<div class="failed__actions">
+					<NcButton variant="primary" @click="retry">
+						<template #icon>
+							<NcIconSvgWrapper :path="mdiRefresh" :size="18" />
+						</template>
+						{{ t('pinpoint', 'Try again') }}
+					</NcButton>
+				</div>
 			</section>
 
 			<div v-else-if="extraction && schema" class="review">
@@ -63,11 +107,9 @@
 				</div>
 
 				<aside class="panel">
-					<div v-if="job.status === 'saved'" class="saved">
-						<span class="saved__icon">
-							<NcIconSvgWrapper :path="mdiCheckDecagramOutline" :size="26" />
-						</span>
-						<div>
+					<div v-if="job.status === 'saved'" class="box saved">
+						<NcIconSvgWrapper :path="mdiCheckCircle" :size="20" class="saved__icon" />
+						<div class="saved__text">
 							<strong>{{ t('pinpoint', 'Saved to {table}', { table: job.schemaName }) }}</strong>
 							<p>{{ t('pinpoint', 'The row links back to this document and keeps the evidence for every value.') }}</p>
 						</div>
@@ -80,39 +122,39 @@
 					</NcNoteCard>
 
 					<section v-for="group in groups" :key="group.id" class="group">
-						<h3 class="group__title" :class="`group__title--${group.id}`">
-							<NcIconSvgWrapper :path="group.icon" :size="18" />
+						<h3 class="group__title">
 							{{ group.title }}
-							<span class="group__count">{{ group.specs.length }}</span>
+							<span class="group__count pp-mono">{{ group.specs.length }}</span>
 						</h3>
 						<p v-if="group.hint" class="group__hint">
 							{{ group.hint }}
 						</p>
-						<FieldCard v-for="spec in group.specs"
-							:key="spec.key"
-							v-model="values[spec.key]"
-							:spec="spec"
-							:result="resultFor(spec.key)"
-							:original="originals[spec.key]"
-							:selected="selectedKey === spec.key"
-							:readonly="job.status === 'saved'"
-							@select="selectedKey = spec.key" />
+						<div class="list">
+							<FieldCard v-for="spec in group.specs"
+								:key="spec.key"
+								v-model="values[spec.key]"
+								:spec="spec"
+								:result="resultFor(spec.key)"
+								:original="originals[spec.key]"
+								:selected="selectedKey === spec.key"
+								:readonly="job.status === 'saved'"
+								@select="selectedKey = spec.key" />
+						</div>
 					</section>
 
 					<section v-if="checks.length" class="group">
 						<h3 class="group__title">
-							<NcIconSvgWrapper :path="mdiScaleBalance" :size="18" />
 							{{ t('pinpoint', 'Cross-checks') }}
 						</h3>
-						<ul class="checks">
+						<ul class="list checks">
 							<li v-for="check in checks" :key="check.id" :class="check.passed ? 'check--passed' : 'check--failed'">
-								<NcIconSvgWrapper :path="check.passed ? mdiCheckCircle : mdiCloseCircle" :size="18" />
-								<span>{{ check.label }}<span v-if="check.detail" class="check__detail">{{ check.detail }}</span></span>
+								<NcIconSvgWrapper :path="check.passed ? mdiCheck : mdiClose" :size="16" class="check__icon" />
+								<span>{{ check.label }}<span v-if="check.detail" class="check__detail pp-mono">{{ check.detail }}</span></span>
 							</li>
 						</ul>
 					</section>
 
-					<div v-if="job.status === 'done'" class="savebar">
+					<div v-if="job.status === 'done'" class="box savebar">
 						<p class="savebar__text">
 							<template v-if="toCheck > 0">
 								{{ n('pinpoint', 'Look at the value marked “Check” before saving.', 'Look at the {n} values marked “Check” or “Not found” before saving.', toCheck, { n: toCheck }) }}
@@ -121,10 +163,10 @@
 								{{ t('pinpoint', 'Every value was found in the document.') }}
 							</template>
 						</p>
-						<NcButton variant="primary" size="large" wide :disabled="saving" @click="save">
+						<NcButton variant="primary" wide :disabled="saving" @click="save">
 							<template #icon>
-								<NcLoadingIcon v-if="saving" :size="20" />
-								<NcIconSvgWrapper v-else :path="mdiTableArrowRight" />
+								<NcLoadingIcon v-if="saving" :size="18" />
+								<NcIconSvgWrapper v-else :path="mdiTableArrowRight" :size="18" />
 							</template>
 							{{ t('pinpoint', 'Approve and save to {table}', { table: job.schemaName }) }}
 						</NcButton>
@@ -143,25 +185,17 @@
 
 <script setup lang="ts">
 import {
-	mdiAlertCircleOutline,
+	mdiCheck,
 	mdiCheckCircle,
-	mdiCheckCircleOutline,
-	mdiCheckDecagramOutline,
-	mdiCloseCircle,
-	mdiFileAlertOutline,
-	mdiFileImageOutline,
-	mdiFilePdfBox,
+	mdiClose,
 	mdiFileQuestionOutline,
-	mdiMinusCircleOutline,
 	mdiOpenInNew,
 	mdiRefresh,
-	mdiScaleBalance,
 	mdiTableArrowRight,
-	mdiTableLarge,
 	mdiTrashCanOutline,
 } from '@mdi/js'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { n, t } from '@nextcloud/l10n'
+import { getCanonicalLocale, n, t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcEmptyContent from '@nextcloud/vue/components/NcEmptyContent'
@@ -173,8 +207,8 @@ import { useRouter } from 'vue-router'
 import { api, errorMessage, type FieldSpec, type Job } from '../api.ts'
 import DocumentViewer from '../components/DocumentViewer.vue'
 import FieldCard, { type FormValue } from '../components/FieldCard.vue'
-import ScanIllustration from '../components/ScanIllustration.vue'
 import TrustBar from '../components/TrustBar.vue'
+import { isPending, jobLabel, jobTone } from '../status.ts'
 import { refreshJobs, upsertJob } from '../store.ts'
 
 const props = defineProps<{ id: string }>()
@@ -186,13 +220,25 @@ const values = ref<Record<string, FormValue>>({})
 const originals = ref<Record<string, FormValue>>({})
 const selectedKey = ref<string | null>(null)
 const saving = ref(false)
+const now = ref(Date.now())
 let timer: ReturnType<typeof setTimeout> | undefined
+const clock = setInterval(() => {
+	now.value = Date.now()
+}, 1000)
 
 const extraction = computed(() => job.value?.result ?? null)
 const schema = computed(() => job.value?.schema ?? null)
 const checks = computed(() => (extraction.value?.checks ?? []).filter((c) => !c.id.startsWith('required:') || !c.passed))
 const toCheck = computed(() => (extraction.value ? extraction.value.summary.review + extraction.value.summary.unverified : 0))
 const fileUrl = computed(() => generateUrl(`/f/${job.value?.fileId}`))
+const ocrPages = computed(() => extraction.value?.pages.some((p) => p.source === 'ocr') ?? false)
+const startedAt = computed(() => (job.value
+	? new Date(job.value.createdAt * 1000).toLocaleString(getCanonicalLocale(), { dateStyle: 'medium', timeStyle: 'short' })
+	: ''))
+const elapsed = computed(() => {
+	const seconds = Math.max(0, Math.floor(now.value / 1000 - (job.value?.createdAt ?? now.value / 1000)))
+	return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+})
 const rowUrl = computed(() => generateUrl(`/apps/tables/#/table/${job.value?.tableId}/row/${job.value?.rowId}`))
 
 // Fields that need a person come first; the table's own column order is kept inside each group.
@@ -204,22 +250,19 @@ const groups = computed(() => {
 			id: 'check',
 			title: t('pinpoint', 'Check these'),
 			hint: t('pinpoint', 'Click a value to see where it is on the page.'),
-			icon: mdiAlertCircleOutline,
-			specs: specs.filter((s) => ['review', 'unverified'].includes(statusOf(s))),
+				specs: specs.filter((s) => ['review', 'unverified'].includes(statusOf(s))),
 		},
 		{
 			id: 'verified',
 			title: t('pinpoint', 'Verified'),
 			hint: '',
-			icon: mdiCheckCircleOutline,
-			specs: specs.filter((s) => statusOf(s) === 'verified'),
+				specs: specs.filter((s) => statusOf(s) === 'verified'),
 		},
 		{
 			id: 'missing',
 			title: t('pinpoint', 'Not in the document'),
 			hint: t('pinpoint', 'Fill these in yourself if you know them, or leave them empty.'),
-			icon: mdiMinusCircleOutline,
-			specs: specs.filter((s) => statusOf(s) === 'missing'),
+				specs: specs.filter((s) => statusOf(s) === 'missing'),
 		},
 	].filter((group) => group.specs.length > 0)
 })
@@ -251,7 +294,7 @@ async function load(): Promise<void> {
 		upsertJob(loaded)
 		loadError.value = ''
 		if (wasPending && loaded.result) fillForm(loaded)
-		if (loaded.status === 'queued' || loaded.status === 'running') {
+		if (isPending(loaded)) {
 			timer = setTimeout(load, 2000)
 		}
 	} catch (error) {
@@ -297,44 +340,28 @@ watch(() => props.id, () => {
 	load()
 }, { immediate: true })
 
-onBeforeUnmount(() => clearTimeout(timer))
+onBeforeUnmount(() => {
+	clearTimeout(timer)
+	clearInterval(clock)
+})
 </script>
 
 <style scoped>
 .job {
-	--pp-brand: #7c6cf2;
 	box-sizing: border-box;
 	min-height: 100%;
-	padding: 16px 24px 32px 56px;
+	padding: 20px 28px 40px 56px;
 }
 
 .head {
+	margin-bottom: 24px;
+}
+
+.head__top {
 	display: flex;
-	align-items: center;
-	gap: 14px;
-	margin-bottom: 18px;
-	padding: 14px 16px;
-	border: 1px solid var(--color-border);
-	border-radius: 16px;
-	background: var(--color-main-background);
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 6px 20px rgba(30, 20, 80, 0.05);
-}
-
-.head__icon {
-	display: inline-flex;
-	flex: none;
-	padding: 9px;
-	border-radius: 12px;
-}
-
-.head__icon--pdf {
-	color: #d93a3a;
-	background: color-mix(in srgb, #d93a3a 12%, transparent);
-}
-
-.head__icon--image {
-	color: #2f80ed;
-	background: color-mix(in srgb, #2f80ed 12%, transparent);
+	align-items: flex-end;
+	gap: 8px;
+	margin-bottom: 16px;
 }
 
 .head__title {
@@ -342,72 +369,136 @@ onBeforeUnmount(() => clearTimeout(timer))
 	min-width: 0;
 }
 
+.head__crumb {
+	color: var(--pp-faint);
+	font-size: 12px;
+}
+
 .head__title h2 {
-	margin: 0;
+	margin: 2px 0 0;
 	overflow: hidden;
-	font-size: 19px;
+	font-size: 26px;
+	font-weight: 600;
+	line-height: 1.2;
+	letter-spacing: -0.035em;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.head__meta {
+.meta {
 	display: flex;
 	flex-wrap: wrap;
+	margin: 0;
+	border: 1px solid var(--pp-border);
+	border-radius: var(--pp-radius-lg);
+	background: var(--pp-bg);
+	box-shadow: var(--pp-shadow);
+}
+
+.meta > div {
+	padding: 12px 20px 14px;
+	border-right: 1px solid var(--pp-border);
+}
+
+.meta dt {
+	display: block;
+	width: auto;
+	margin-bottom: 4px;
+	padding: 0;
+	text-align: start;
+	color: var(--pp-muted);
+	font-size: 12.5px;
+}
+
+.meta dd {
+	display: flex;
+	width: auto;
+	padding: 0;
 	align-items: center;
-	gap: 4px 14px;
-	color: var(--color-text-maxcontrast);
+	gap: 8px;
+	margin: 0;
+	font-size: 14px;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.meta__soft {
+	color: var(--pp-faint);
+	font-weight: normal;
+}
+
+.meta > .meta__trust {
+	flex: 1;
+	min-width: 240px;
+	border-right: 0;
+}
+
+.meta__trust dd {
+	display: block;
+	padding-top: 4px;
+	font-weight: normal;
+}
+
+.box {
+	overflow: hidden;
+	border: 1px solid var(--pp-border);
+	border-radius: var(--pp-radius-lg);
+	background: var(--pp-bg);
+	box-shadow: var(--pp-shadow);
+}
+
+.pending,
+.failed {
+	padding: 16px 20px;
+	margin-bottom: 20px;
+}
+
+.pending__head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 15px;
+}
+
+.pending__head strong {
+	flex: 1;
+	font-weight: 600;
+}
+
+.pending__time {
+	color: var(--pp-muted);
 	font-size: 13px;
 }
 
-.head__meta a,
-.head__table {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
+.pending p {
+	max-width: 640px;
+	margin-top: 6px;
+	color: var(--pp-muted);
+	font-size: 14px;
+	line-height: 1.55;
 }
 
-.head__meta a:hover {
-	color: var(--color-main-text);
-	text-decoration: underline;
+.log {
+	margin: 12px 0;
+	padding: 12px 14px;
+	border: 1px solid var(--pp-border);
+	border-radius: 8px;
+	background: var(--pp-bg-2);
+	color: var(--pp-red-text);
+	font-size: 12.5px;
+	line-height: 1.6;
+	white-space: pre-wrap;
 }
 
-.head__trust {
-	flex: 0 1 380px;
-	min-width: 220px;
-}
-
-.state {
+.failed__actions {
 	display: flex;
-	flex-direction: column;
-	align-items: center;
-	max-width: 520px;
-	margin: 48px auto;
-	text-align: center;
-}
-
-.state h3 {
-	margin: 16px 0 6px;
-	font-size: 19px;
-}
-
-.state p {
-	margin-bottom: 18px;
-	color: var(--color-text-maxcontrast);
-	line-height: 1.5;
-}
-
-.state__icon {
-	display: inline-flex;
-	padding: 18px;
-	border-radius: 50%;
-	color: var(--color-element-error, #c90000);
-	background: color-mix(in srgb, var(--color-element-error, #c90000) 10%, transparent);
+	justify-content: flex-end;
 }
 
 .review {
 	display: grid;
 	grid-template-columns: minmax(0, 3fr) minmax(340px, 2fr);
-	gap: 20px;
+	gap: 24px;
 	align-items: start;
 }
 
@@ -416,110 +507,116 @@ onBeforeUnmount(() => clearTimeout(timer))
 	top: 8px;
 	max-height: calc(100vh - var(--header-height, 50px) - 40px);
 	overflow-y: auto;
-	padding: 18px 18px 34px;
-	border-radius: 18px;
+	padding: 24px 24px 44px;
+	border: 1px solid var(--pp-border);
+	border-radius: var(--pp-radius-lg);
 	background:
-		radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--color-main-text) 9%, transparent) 1px, transparent 0) 0 0 / 18px 18px,
-		var(--color-background-dark);
+		radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--pp-fg) 13%, transparent) 1px, transparent 0) 0 0 / 16px 16px,
+		var(--pp-bg-2);
 }
 
 .panel {
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
+	gap: 16px;
 }
 
-.group {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-}
-
-.group + .group {
-	margin-top: 10px;
+.list {
+	overflow: hidden;
+	border: 1px solid var(--pp-border);
+	border-radius: var(--pp-radius-lg);
+	background: var(--pp-bg);
+	box-shadow: var(--pp-shadow);
 }
 
 .group__title {
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	margin: 0;
-	font-size: 15px;
-}
-
-.group__title--check {
-	color: var(--color-warning-text, #664700);
-}
-
-.group__title--verified {
-	color: var(--color-success-text, #005416);
+	margin: 0 0 8px;
+	font-size: 14px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
 }
 
 .group__count {
-	padding: 0 8px;
+	display: inline-flex;
+	align-items: center;
+	height: 20px;
+	padding: 0 7px;
+	border: 1px solid var(--pp-border);
 	border-radius: 999px;
-	background: var(--color-background-dark);
-	color: var(--color-text-maxcontrast);
-	font-size: 12px;
+	color: var(--pp-muted);
+	font-size: 11.5px;
+	font-weight: normal;
 }
 
 .group__hint {
-	margin-top: -4px;
-	color: var(--color-text-maxcontrast);
+	margin: -4px 0 10px;
+	color: var(--pp-muted);
 	font-size: 13px;
-}
-
-.checks {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
 }
 
 .checks li {
 	display: flex;
 	align-items: flex-start;
-	gap: 8px;
-	padding: 8px 12px;
-	border-radius: 10px;
+	gap: 10px;
+	padding: 10px 16px;
 	font-size: 13.5px;
 }
 
-.check--passed {
-	color: var(--color-success-text, #005416);
-	background: color-mix(in srgb, var(--color-element-success, #099f05) 9%, transparent);
+.checks li + li {
+	border-top: 1px solid var(--pp-border);
+}
+
+.check__icon {
+	flex: none;
+	margin-top: 1px;
+}
+
+.check--passed .check__icon {
+	color: var(--pp-green);
+}
+
+.check--failed .check__icon {
+	color: var(--pp-red);
 }
 
 .check--failed {
-	color: var(--color-error-text, #8a0000);
-	background: color-mix(in srgb, var(--color-element-error, #c90000) 9%, transparent);
+	color: var(--pp-red-text);
 }
 
 .check__detail {
 	display: block;
-	opacity: 0.85;
-	font-size: 12.5px;
+	margin-top: 2px;
+	color: var(--pp-muted);
+	font-size: 12px;
 }
 
 .saved {
 	display: flex;
 	align-items: center;
 	gap: 12px;
-	padding: 14px;
-	border-radius: 14px;
-	background: color-mix(in srgb, var(--color-element-success, #099f05) 10%, var(--color-main-background));
-	border: 1px solid color-mix(in srgb, var(--color-element-success, #099f05) 35%, transparent);
+	padding: 14px 16px;
 }
 
 .saved__icon {
-	color: var(--color-element-success, #099f05);
+	flex: none;
+	color: var(--pp-blue);
 }
 
-.saved div {
+.saved__text {
 	flex: 1;
+	min-width: 0;
+	font-size: 14px;
 }
 
-.saved p {
-	color: var(--color-text-maxcontrast);
+.saved__text strong {
+	font-weight: 600;
+}
+
+.saved__text p {
+	color: var(--pp-muted);
 	font-size: 13px;
 }
 
@@ -528,29 +625,63 @@ onBeforeUnmount(() => clearTimeout(timer))
 	bottom: 12px;
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
-	margin-top: 8px;
+	gap: 10px;
 	padding: 12px;
-	border: 1px solid var(--color-border);
-	border-radius: 16px;
-	background: var(--color-main-background);
-	box-shadow: 0 8px 28px rgba(30, 20, 80, 0.12);
+	box-shadow: var(--pp-shadow-lg);
 }
 
 .savebar__text {
-	color: var(--color-text-maxcontrast);
+	color: var(--pp-muted);
 	font-size: 13px;
 	text-align: center;
 }
 
-@media (max-width: 1100px) {
-	.head {
-		flex-wrap: wrap;
-	}
+/* Placeholder layout while the document is read. */
+.skeleton {
+	border-radius: 6px;
+	background: linear-gradient(90deg, var(--pp-bg-3) 0%, var(--pp-bg-2) 50%, var(--pp-bg-3) 100%) 0 0 / 200% 100%;
+	animation: shimmer 1.6s linear infinite;
+}
 
-	.head__trust {
+.skeleton--page {
+	aspect-ratio: 1 / 1.414;
+	border-radius: 4px;
+}
+
+.skeleton-row {
+	padding: 16px;
+}
+
+.skeleton-row + .skeleton-row {
+	border-top: 1px solid var(--pp-border);
+}
+
+.skeleton--label {
+	width: 35%;
+	height: 12px;
+	margin-bottom: 10px;
+}
+
+.skeleton--input {
+	height: 34px;
+}
+
+@keyframes shimmer {
+	to {
+		background-position: -200% 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.skeleton {
+		animation: none;
+	}
+}
+
+@media (max-width: 1100px) {
+	.meta > .meta__trust {
 		flex-basis: 100%;
-		order: 3;
+		border-top: 1px solid var(--pp-border);
 	}
 }
 

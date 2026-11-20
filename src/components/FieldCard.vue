@@ -1,17 +1,17 @@
 <template>
 	<div class="field"
-		:class="[`field--${status}`, { 'field--selected': selected }]"
+		:class="[`field--${statusInfo.tone}`, `field--${spec.type}`, { 'field--selected': selected }]"
 		@click="emit('select')"
 		@focusin="emit('select')">
 		<div class="field__head">
 			<span class="field__type" :title="typeLabel">
-				<NcIconSvgWrapper :path="typeIcon" :size="16" />
+				<NcIconSvgWrapper :path="typeIcon" :size="14" />
 			</span>
 			<span class="field__label">
 				{{ spec.label }}<span v-if="spec.required" class="field__required" :title="t('pinpoint', 'Required')">*</span>
 			</span>
-			<span class="badge" :title="statusInfo.hint">
-				<NcIconSvgWrapper :path="statusInfo.icon" :size="15" />
+			<span class="pp-badge" :class="`pp-badge--${statusInfo.tone}`" :title="statusInfo.hint">
+				<span class="pp-dot" :class="`pp-dot--${statusInfo.tone}`" />
 				{{ statusInfo.label }}
 			</span>
 		</div>
@@ -47,14 +47,13 @@
 			:disabled="readonly"
 			@update:model-value="(v: string | number) => emit('update:modelValue', String(v))" />
 
-		<div v-if="result?.anchor && !edited" class="quote">
-			<span class="quote__page">{{ t('pinpoint', 'p. {n}', { n: result.anchor.page + 1 }) }}</span>
-			<span class="quote__text">{{ result.anchor.matched_text }}</span>
+		<div v-if="result?.anchor && !edited" class="quote pp-mono">
+			<span class="quote__page">{{ t('pinpoint', 'p.{n}', { n: result.anchor.page + 1 }) }}</span>
+			<span class="quote__text">“{{ result.anchor.matched_text }}”</span>
 		</div>
 		<ul v-if="reasons.length" class="reasons">
 			<li v-for="reason in reasons" :key="reason">
-				<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path :d="mdiInformationOutline" fill="currentColor" /></svg>
-				<span>{{ reason }}</span>
+				{{ reason }}
 			</li>
 		</ul>
 	</div>
@@ -65,8 +64,6 @@ import {
 	mdiCalendarBlankOutline,
 	mdiFormatListBulleted,
 	mdiFormatText,
-	mdiInformationOutline,
-	mdiPencilOutline,
 	mdiPound,
 	mdiToggleSwitchOutline,
 } from '@mdi/js'
@@ -104,10 +101,10 @@ const TYPES = {
 const typeIcon = computed(() => TYPES[props.spec.type].icon)
 const typeLabel = computed(() => TYPES[props.spec.type].label)
 const edited = computed(() => String(props.modelValue ?? '') !== String(props.original ?? ''))
-const status = computed(() => (edited.value ? 'edited' : props.result?.status ?? 'missing'))
+const status = computed(() => props.result?.status ?? 'missing')
 const statusInfo = computed(() => (edited.value
-	? { label: t('pinpoint', 'Edited'), hint: t('pinpoint', 'You changed this value. It will be saved as entered by you.'), icon: mdiPencilOutline }
-	: FIELD_STATUS[props.result?.status ?? 'missing']))
+	? { label: t('pinpoint', 'Edited'), hint: t('pinpoint', 'You changed this value. It will be saved as entered by you.'), tone: 'blue' }
+	: FIELD_STATUS[status.value]))
 const reasons = computed(() => (edited.value || props.result?.status === 'missing' ? [] : props.result?.reasons ?? []))
 const stringValue = computed(() => (props.modelValue === null ? '' : String(props.modelValue)))
 const dateValue = computed(() => {
@@ -123,46 +120,40 @@ function isoDate(date: Date): string {
 
 <style scoped>
 .field {
-	--status-color: var(--color-text-maxcontrast);
-	--status-text: var(--color-text-maxcontrast);
-	padding: 12px 14px 14px;
-	border: 1px solid var(--color-border);
-	border-radius: 14px;
-	background: var(--color-main-background);
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+	--tone: var(--pp-gray);
+	--tone-text: var(--pp-muted);
+	position: relative;
+	padding: 14px 16px 16px;
 	cursor: pointer;
-	transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
+	transition: background 0.15s;
+}
+
+.field + .field {
+	border-top: 1px solid var(--pp-border);
 }
 
 .field:hover {
-	box-shadow: 0 4px 16px rgba(30, 20, 80, 0.07);
+	background: var(--pp-bg-2);
 }
 
 .field--selected {
-	border-color: var(--status-color);
-	box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-color) 22%, transparent), 0 6px 20px rgba(30, 20, 80, 0.08);
-	transform: translateY(-1px);
+	background: var(--pp-bg-2);
 }
 
-.field--verified {
-	--status-color: var(--color-element-success, #099f05);
-	--status-text: var(--color-success-text, #005416);
+.field--selected::before {
+	content: '';
+	position: absolute;
+	top: -1px;
+	bottom: 0;
+	left: 0;
+	width: 2px;
+	background: var(--tone);
 }
 
-.field--review {
-	--status-color: var(--color-element-warning, #bf7900);
-	--status-text: var(--color-warning-text, #664700);
-}
-
-.field--unverified {
-	--status-color: var(--color-element-error, #c90000);
-	--status-text: var(--color-error-text, #8a0000);
-}
-
-.field--edited {
-	--status-color: var(--color-primary-element);
-	--status-text: var(--color-primary-element);
-}
+.field--green { --tone: var(--pp-green); --tone-text: var(--pp-green-text); }
+.field--amber { --tone: var(--pp-amber); --tone-text: var(--pp-amber-text); }
+.field--red { --tone: var(--pp-red); --tone-text: var(--pp-red-text); }
+.field--blue { --tone: var(--pp-blue); --tone-text: var(--pp-blue-text); }
 
 .field__head {
 	display: flex;
@@ -173,34 +164,27 @@ function isoDate(date: Date): string {
 
 .field__type {
 	display: inline-flex;
-	padding: 4px;
-	border-radius: 8px;
-	background: var(--color-background-hover);
-	color: var(--color-text-maxcontrast);
+	color: var(--pp-faint);
 }
 
 .field__label {
 	flex: 1;
 	min-width: 0;
-	font-weight: 600;
+	font-size: 14px;
+	font-weight: 500;
 }
 
 .field__required {
 	margin-left: 2px;
-	color: var(--color-text-maxcontrast);
+	color: var(--pp-faint);
 }
 
-.badge {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	padding: 2px 9px 2px 7px;
-	border-radius: 999px;
-	color: var(--status-text);
-	background: color-mix(in srgb, var(--status-color) 13%, transparent);
-	font-size: 12px;
-	font-weight: 600;
-	white-space: nowrap;
+/* Values are data: mono, like the quote they came from. */
+.field--text :deep(input),
+.field--number :deep(input),
+.field--date :deep(input) {
+	font-family: var(--pp-mono);
+	font-size: 13.5px;
 }
 
 .quote {
@@ -208,60 +192,55 @@ function isoDate(date: Date): string {
 	align-items: baseline;
 	gap: 8px;
 	margin-top: 10px;
-	padding: 6px 10px;
-	border-left: 3px solid var(--status-color);
-	border-radius: 0 8px 8px 0;
-	background: color-mix(in srgb, var(--status-color) 6%, var(--color-background-hover));
-	font-size: 13px;
+	color: var(--pp-muted);
+	font-size: 12px;
+	line-height: 1.5;
 }
 
 .quote__page {
 	flex: none;
-	padding: 0 6px;
-	border-radius: 6px;
-	background: var(--color-main-background);
-	color: var(--color-text-maxcontrast);
+	padding: 0 5px;
+	border: 1px solid var(--pp-border);
+	border-radius: 4px;
+	background: var(--pp-bg);
+	color: var(--pp-faint);
 	font-size: 11px;
-	font-weight: 700;
-	text-transform: uppercase;
-	letter-spacing: 0.03em;
 }
 
 .quote__text {
+	min-width: 0;
 	overflow-wrap: anywhere;
-	font-size: 13px;
-}
-
-.quote__text::before {
-	content: '“';
-	color: var(--color-text-maxcontrast);
-}
-
-.quote__text::after {
-	content: '”';
-	color: var(--color-text-maxcontrast);
 }
 
 .reasons {
 	margin-top: 8px;
+	padding-left: 0;
+	list-style: none;
 }
 
 .reasons li {
-	display: flex;
-	align-items: flex-start;
-	gap: 6px;
-	padding-left: 2px;
-	color: var(--status-text);
-	font-size: 12.5px;
-	line-height: 1.4;
+	position: relative;
+	padding-left: 14px;
+	color: var(--tone-text);
+	font-size: 13px;
+	line-height: 1.45;
 }
 
-.field--verified .reasons li {
-	color: var(--color-text-maxcontrast);
+.reasons li::before {
+	content: '';
+	position: absolute;
+	top: 0.6em;
+	left: 2px;
+	width: 5px;
+	height: 1px;
+	background: currentColor;
 }
 
-.reasons svg {
-	flex: none;
+.reasons li + li {
 	margin-top: 2px;
+}
+
+.field--green .reasons li {
+	color: var(--pp-muted);
 }
 </style>

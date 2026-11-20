@@ -17,7 +17,7 @@
 				:aria-label="mark.label"
 				:title="mark.label"
 				@click="emit('select', mark.key)" />
-			<figcaption>
+			<figcaption class="pp-mono">
 				{{ t('pinpoint', 'Page {n} of {total}', { n: page.index + 1, total: pages.length }) }}
 				<span v-if="page.source === 'ocr'"> · {{ t('pinpoint', 'scanned, read with OCR') }}</span>
 			</figcaption>
@@ -73,16 +73,16 @@ watch(() => props.selectedKey, async (key) => {
 .viewer {
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 36px;
 }
 
 .page {
 	position: relative;
 	width: 100%;
 	margin: 0;
+	border-radius: 4px;
 	background: #fff;
-	box-shadow: 0 1px 6px var(--color-box-shadow);
-	border-radius: var(--border-radius);
+	box-shadow: 0 0 0 1px var(--pp-border), 0 8px 24px -6px rgba(0, 0, 0, 0.12);
 }
 
 .page img {
@@ -90,7 +90,7 @@ watch(() => props.selectedKey, async (key) => {
 	inset: 0;
 	width: 100%;
 	height: 100%;
-	border-radius: var(--border-radius);
+	border-radius: 4px;
 	user-select: none;
 }
 
@@ -98,23 +98,23 @@ watch(() => props.selectedKey, async (key) => {
 	position: absolute;
 	top: 100%;
 	left: 0;
-	padding-top: 2px;
-	color: var(--color-text-maxcontrast);
-	font-size: var(--font-size-small, 13px);
+	padding-top: 8px;
+	color: var(--pp-faint);
+	font-size: 11px;
 }
 
 .mark {
 	position: absolute;
 	min-width: 0;
 	min-height: 0;
-	margin: -2px;
+	margin: -3px;
 	padding: 2px;
 	box-sizing: content-box;
-	border: 2px solid var(--mark-color);
-	border-radius: 3px;
-	background: color-mix(in srgb, var(--mark-color) 14%, transparent);
+	border: 1.5px solid var(--mark-color);
+	border-radius: 4px;
+	background: color-mix(in srgb, var(--mark-color) 12%, transparent);
 	cursor: pointer;
-	opacity: 0.7;
+	opacity: 0.65;
 	transition: opacity 0.15s, box-shadow 0.15s;
 }
 
@@ -125,26 +125,34 @@ watch(() => props.selectedKey, async (key) => {
 
 .mark--active {
 	opacity: 1;
-	box-shadow: 0 0 0 4px color-mix(in srgb, var(--mark-color) 35%, transparent);
+	border-width: 2px;
+	background: color-mix(in srgb, var(--mark-color) 18%, transparent);
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--mark-color) 25%, transparent);
 	animation: pulse 1.2s ease-out 1;
 }
 
 .mark--verified {
-	--mark-color: var(--color-element-success, #099f05);
+	--mark-color: var(--pp-green);
 }
 
 .mark--review {
-	--mark-color: var(--color-element-warning, #bf7900);
+	--mark-color: var(--pp-amber);
 }
 
 .mark--unverified,
 .mark--missing {
-	--mark-color: var(--color-element-error, #c90000);
+	--mark-color: var(--pp-red);
 }
 
 @keyframes pulse {
 	from {
-		box-shadow: 0 0 0 12px color-mix(in srgb, var(--mark-color) 0%, transparent);
+		box-shadow: 0 0 0 14px color-mix(in srgb, var(--mark-color) 0%, transparent);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.mark--active {
+		animation: none;
 	}
 }
 </style>

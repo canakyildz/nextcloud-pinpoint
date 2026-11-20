@@ -1,0 +1,120 @@
+/*
+ * Pinpoint's look: monochrome, thin borders, Geist for text and Geist Mono for values and quotes.
+ * Every colour is derived from Nextcloud's own variables, so the light, dark and high-contrast
+ * themes keep working. The Nextcloud components inside the app pick up the same tokens through
+ * the variables they already read (primary colour, radius, font).
+ */
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+
+.pp {
+	--pp-font: 'Geist Variable', var(--font-face, system-ui), sans-serif;
+	--pp-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+	--pp-fg: var(--color-main-text);
+	--pp-bg: var(--color-main-background);
+	--pp-bg-2: color-mix(in srgb, var(--pp-fg) 2.5%, var(--pp-bg));
+	--pp-bg-3: color-mix(in srgb, var(--pp-fg) 5.5%, var(--pp-bg));
+	--pp-border: color-mix(in srgb, var(--pp-fg) 11%, var(--pp-bg));
+	--pp-border-strong: color-mix(in srgb, var(--pp-fg) 22%, var(--pp-bg));
+	--pp-muted: color-mix(in srgb, var(--pp-fg) 62%, var(--pp-bg));
+	--pp-faint: color-mix(in srgb, var(--pp-fg) 42%, var(--pp-bg));
+
+	/* Status accents. Text variants mix toward the text colour so they stay readable in both themes. */
+	--pp-green: #45a557;
+	--pp-amber: #f5a524;
+	--pp-red: #e5484d;
+	--pp-blue: #0a72ef;
+	--pp-gray: var(--pp-faint);
+	--pp-green-text: color-mix(in srgb, var(--pp-green) 62%, var(--pp-fg));
+	--pp-amber-text: color-mix(in srgb, var(--pp-amber) 58%, var(--pp-fg));
+	--pp-red-text: color-mix(in srgb, var(--pp-red) 66%, var(--pp-fg));
+	--pp-blue-text: color-mix(in srgb, var(--pp-blue) 72%, var(--pp-fg));
+
+	--pp-radius: 6px;
+	--pp-radius-lg: 12px;
+	--pp-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+	--pp-shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.04), 0 12px 32px -8px rgba(0, 0, 0, 0.12);
+
+	/* Nextcloud components inside Pinpoint: black-on-white primary, tighter corners, Geist. */
+	--font-face: var(--pp-font);
+	--color-primary-element: var(--pp-fg);
+	--color-primary-element-hover: color-mix(in srgb, var(--pp-fg) 84%, var(--pp-bg));
+	--color-primary-element-text: var(--pp-bg);
+	--color-primary-element-text-dark: var(--pp-bg);
+	--color-primary-element-light: var(--pp-bg-3);
+	--color-primary-element-light-hover: color-mix(in srgb, var(--pp-fg) 9%, var(--pp-bg));
+	--color-primary-element-light-text: var(--pp-fg);
+	--border-radius-element: var(--pp-radius);
+	--border-radius-small: 4px;
+
+	font-family: var(--pp-font);
+	font-feature-settings: 'ss01' off;
+	-webkit-font-smoothing: antialiased;
+}
+
+.pp h1,
+.pp h2,
+.pp h3,
+.pp h4 {
+	font-family: var(--pp-font);
+	letter-spacing: -0.02em;
+}
+
+.pp .pp-mono {
+	font-family: var(--pp-mono);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0;
+}
+
+/* Status dot, as in a deployment list. */
+.pp .pp-dot {
+	display: inline-block;
+	flex: none;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--dot, var(--pp-gray));
+}
+
+.pp .pp-dot--pulse {
+	animation: pp-pulse 1.4s ease-in-out infinite;
+}
+
+.pp .pp-dot--green { --dot: var(--pp-green); }
+.pp .pp-dot--amber { --dot: var(--pp-amber); }
+.pp .pp-dot--red { --dot: var(--pp-red); }
+.pp .pp-dot--blue { --dot: var(--pp-blue); }
+
+/* Small rounded badge with a tinted background. */
+.pp .pp-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 22px;
+	padding: 0 8px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--badge, var(--pp-gray)) 13%, transparent);
+	color: var(--badge-text, var(--pp-muted));
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 1;
+	white-space: nowrap;
+}
+
+.pp .pp-badge--green { --badge: var(--pp-green); --badge-text: var(--pp-green-text); }
+.pp .pp-badge--amber { --badge: var(--pp-amber); --badge-text: var(--pp-amber-text); }
+.pp .pp-badge--red { --badge: var(--pp-red); --badge-text: var(--pp-red-text); }
+.pp .pp-badge--blue { --badge: var(--pp-blue); --badge-text: var(--pp-blue-text); }
+
+@keyframes pp-pulse {
+	50% {
+		opacity: 0.35;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pp .pp-dot--pulse {
+		animation: none;
+	}
+}

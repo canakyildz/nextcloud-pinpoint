@@ -176,4 +176,5 @@ dev/                      local Nextcloud stack and setup
 ## License
 
 [AGPL-3.0-or-later](LICENSE). `start.sh` and `healthcheck.sh` come from
-[nextcloud/app-skeleton-python](https://github.com/nextcloud/app-skeleton-python).
+[nextcloud/app-skeleton-python](https://github.com/nextcloud/app-skeleton-python). The interface bundles the
+[Geist and Geist Mono](https://github.com/vercel/geist-font) fonts, under the SIL Open Font License 1.1.
