@@ -1,7 +1,17 @@
 # Publishing Pinpoint to the Nextcloud App Store
 
-Nothing here has been done yet. Each step is public or hard to undo, so it waits for a go-ahead. The order
-matters: the app id is registered with a certificate, and releases are signed with that certificate's key.
+Pinpoint is on the App Store: [apps.nextcloud.com/apps/pinpoint](https://apps.nextcloud.com/apps/pinpoint).
+Where each step stands, as of 2026-11-23:
+
+- [x] 1. Public repository and image.
+- [x] 2. Certificate: [nextcloud/app-certificate-requests#1487](https://github.com/nextcloud/app-certificate-requests/pull/1487), merged 2026-11-23.
+- [x] 3. App id registered on apps.nextcloud.com.
+- [ ] 4. Release secrets in GitHub: not set. 0.1.0 was uploaded by hand (*Developer → Upload release*).
+- [x] 5. 0.1.0 released on GitHub and on the App Store.
+- [ ] 6. Installed from the App Store on a test instance.
+
+The steps below stay as the reference for later releases. The order matters: the app id is registered with a
+certificate, and releases are signed with that certificate's key.
 
 ## 0. Before anything is public
 

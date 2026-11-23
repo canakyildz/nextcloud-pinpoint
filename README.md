@@ -113,9 +113,9 @@ Requirements:
   [OpenAI and LocalAI integration](https://apps.nextcloud.com/apps/integration_openai) pointed at OpenAI,
   LocalAI or Ollama.
 
-**From the App Store** (once published): *Apps → search "Pinpoint" → Deploy and enable*.
+**From the [App Store](https://apps.nextcloud.com/apps/pinpoint)**: *Apps → search "Pinpoint" → Deploy and enable*.
 
-**Before that**, an admin can register it straight from this repository; AppAPI pulls the image from
+**From this repository**, an admin can also register it directly; AppAPI pulls the image from
 `ghcr.io/canakyildz/nextcloud-pinpoint`:
 
 ```bash
